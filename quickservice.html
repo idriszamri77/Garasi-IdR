@@ -1113,9 +1113,14 @@ function resetForm() {
 // NAVIGATION
 // ============================================================
 function navTo(page) {
-  // Hook ke routing aplikasi kamu
-  // window.location.href = `/${page}.html`;
-  showToast(`Navigasi ke: ${page}`, '');
+  const pages = {
+    home: 'dashboard.html',
+    servis: 'quickservice.html',
+    cari: 'searchlaporan.html',
+    laporan: 'searchlaporan.html',
+    admin: 'admin.html'
+  };
+  window.location.href = pages[page] || 'dashboard.html';
 }
 
 function showFullFormHint() {
