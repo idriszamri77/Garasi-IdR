@@ -1034,7 +1034,7 @@ async function prosesSimapan({ km, tanggal, bengkelId, followup, catatanFollowup
   document.getElementById('btnSimpan').disabled = true;
 
   const payload = {
-    action: 'simpanServis',
+    action: 'addServis',
     plat_nomor: state.selectedKendaraan.plat_nomor,
     input_oleh: state.selectedUser.id_user,
     nama_input_oleh: state.selectedUser.nama_user,
