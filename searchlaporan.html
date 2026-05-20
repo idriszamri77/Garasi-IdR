@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Garasi IdR — Cari & Laporan</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --orange:#F05E0E;--navy:#0F1F4B;--green:#22C55E;
+  --yellow:#F59E0B;--red:#EF4444;--blue:#3B82F6;
+  --bg:#EEF2F8;--card:#fff;
+}
+*{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}
+html,body{background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;color:#1E293B;overscroll-behavior:none;}
+.display{font-family:'Syne',sans-serif;}
+.mono{font-family:'JetBrains Mono',monospace;}
+
+/* ── Page tabs (top-level: Search / Laporan) ── */
+.page-tabs{background:var(--navy);padding:0 16px;}
+.page-tab{padding:14px 0 12px;font-size:14px;font-weight:700;color:rgba(255,255,255,0.4);border:none;background:none;cursor:pointer;position:relative;transition:color 0.2s;flex:1;}
+.page-tab.active{color:#fff;}
+.page-tab.active::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:2.5px;border-radius:2px;background:var(--orange);}
+
+/* ── Search bar ── */
+.search-wrap{position:relative;}
+.search-input{width:100%;border:none;border-radius:14px;padding:14px 44px 14px 48px;font-size:15px;font-family:'Plus Jakarta Sans',sans-serif;background:#fff;color:#1E293B;outline:none;box-shadow:0 2px 12px rgba(15,31,75,0.08);}
+.search-input:focus{box-shadow:0 2px 16px rgba(240,94,14,0.18);}
+.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);}
+.search-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:#E8EEF6;border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#64748B;}
+
+/* ── Filter chips ── */
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer;transition:all 0.15s;color:#64748B;white-space:nowrap;}
+.chip.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.chip:active{transform:scale(0.96);}
+
+/* ── Result cards ── */
+.result-card{background:#fff;border-radius:14px;border:1.5px solid #E8EEF6;overflow:hidden;cursor:pointer;transition:all 0.15s;}
+.result-card:active{transform:scale(0.99);box-shadow:0 4px 16px rgba(0,0,0,0.08);}
+.result-header{padding:13px 15px;border-bottom:1px solid #F1F5F9;}
+.result-items{padding:9px 15px 12px;}
+.result-item-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #F8FAFC;font-size:12px;}
+.result-item-row:last-child{border-bottom:none;}
+
+/* ── Highlight match ── */
+.hl{background:#FEF9C3;color:#92400E;border-radius:3px;padding:0 2px;}
+
+/* ── Empty state ── */
+.empty{text-align:center;padding:48px 24px;}
+.empty-icon{font-size:44px;margin-bottom:12px;}
+
+/* ── Laporan tabs ── */
+.inner-tab-bar{background:#fff;border-bottom:2px solid #E8EEF6;position:sticky;z-index:20;}
+.inner-tab{flex:1;padding:13px 0 11px;font-size:13px;font-weight:600;color:#94A3B8;border:none;background:none;cursor:pointer;position:relative;transition:color 0.2s;}
+.inner-tab.active{color:var(--navy);}
+.inner-tab.active::after{content:'';position:absolute;bottom:-2px;left:15%;right:15%;height:2.5px;border-radius:2px;background:var(--orange);}
+
+/* ── Laporan stat cards ── */
+.stat-card{background:#fff;border-radius:14px;padding:16px;border:1.5px solid #E8EEF6;}
+.stat-big{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--orange);}
+.stat-label{font-size:11px;color:#94A3B8;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+
+/* ── Bar chart ── */
+.bar-chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;width:44px;}
+.bar-fill{border-radius:4px 4px 0 0;width:28px;transition:height 0.8s cubic-bezier(0.4,0,0.2,1);position:relative;cursor:pointer;}
+.bar-label{font-size:10px;color:#94A3B8;font-weight:600;text-align:center;}
+.bar-value{font-size:9px;font-weight:700;color:#64748B;text-align:center;}
+
+/* ── Donut chart ── */
+canvas{display:block;}
+
+/* ── Followup cards ── */
+.followup-card{background:#fff;border-radius:12px;border-left:3px solid #F97316;padding:13px 14px;border-top:1px solid #E8EEF6;border-right:1px solid #E8EEF6;border-bottom:1px solid #E8EEF6;}
+
+/* ── Buttons ── */
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--orange);color:#fff;border-radius:12px;min-height:48px;font-weight:700;font-size:14px;border:none;cursor:pointer;transition:all 0.15s;width:100%;}
+.btn-primary:active{transform:scale(0.98);}
+.btn-outline{display:flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid #E2E8F0;color:#475569;background:#fff;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn-outline:active{background:#F8FAFC;}
+.btn-export{display:flex;align-items:center;justify-content:center;gap:7px;border:1.5px solid var(--orange);color:var(--orange);background:#FFF4EF;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.btn-export:active{background:#FFE8D8;}
+
+/* ── Section title ── */
+.sec{font-size:11px;font-weight:700;color:#94A3B8;letter-spacing:0.08em;text-transform:uppercase;padding:0 2px;margin-bottom:10px;}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:3px;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;}
+.badge-orange{background:#FFF4EF;color:#C2410C;}
+.badge-blue{background:#EFF6FF;color:#1D4ED8;}
+.badge-green{background:#DCFCE7;color:#15803D;}
+.badge-red{background:#FEE2E2;color:#B91C1C;}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp 0.25s ease forwards;}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(15,31,75,0.55);backdrop-filter:blur(3px);z-index:800;display:flex;align-items:flex-end;justify-content:center;padding:0;}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal-center{align-items:center;padding:16px;}
+
+/* ── Bottom nav ── */
+.bottom-nav{height:64px;background:#fff;border-top:1px solid #E2E8F0;}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(16px);background:#1E293B;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:all 0.25s;z-index:9999;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{background:#15803D;}
+.toast.err{background:#B91C1C;}
+
+/* ── PDF preview ── */
+.pdf-preview{background:#F8FAFC;border-radius:12px;border:1.5px dashed #CBD5E1;padding:24px;text-align:center;}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:#E2E8F0;border-radius:3px;}
+</style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+<!-- ══════════════ TOP HEADER ══════════════ -->
+<div style="background:var(--navy);">
+  <!-- Title row -->
+  <div style="height:52px;" class="flex items-center px-4 gap-2">
+    <span class="display text-white font-bold text-lg">Garasi IdR</span>
+    <span class="text-white/30 text-sm ml-1">— Cari &amp; Laporan</span>
+  </div>
+  <!-- Page tabs -->
+  <div class="page-tabs flex" id="pageTabs">
+    <button class="page-tab active" onclick="switchPage('search')">🔍 Cari</button>
+    <button class="page-tab" onclick="switchPage('laporan')">📊 Laporan</button>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE: SEARCH ══════════════ -->
+<div id="pageCari" class="flex-1 pb-24">
+
+  <!-- Search bar sticky -->
+  <div class="sticky z-30 px-4 py-3" style="top:0;background:var(--bg);">
+    <div class="search-wrap">
+      <svg class="search-icon" width="18" height="18" fill="none" viewBox="0 0 24 24"><circle stroke="#94A3B8" stroke-width="2" cx="11" cy="11" r="7"/><path stroke="#94A3B8" stroke-width="2" stroke-linecap="round" d="M20 20l-4-4"/></svg>
+      <input type="text" id="searchInput" class="search-input" placeholder="Cari plat, bengkel, item servis, part…"
+        oninput="onSearchInput(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="search-clear hidden" id="searchClear" onclick="clearSearch()">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Filter chips -->
+    <div class="flex gap-2 mt-2.5 overflow-x-auto pb-1" style="-webkit-overflow-scrolling:touch;">
+      <button class="chip active" data-filter="semua" onclick="setFilter('semua')">Semua</button>
+      <button class="chip" data-filter="kendaraan" onclick="setFilter('kendaraan')">🚗 Kendaraan</button>
+      <button class="chip" data-filter="servis" onclick="setFilter('servis')">🔧 Servis</button>
+      <button class="chip" data-filter="part" onclick="setFilter('part')">⚙️ Part</button>
+      <button class="chip" data-filter="bengkel" onclick="setFilter('bengkel')">🏪 Bengkel</button>
+    </div>
+  </div>
+
+  <!-- Result count -->
+  <div class="px-4 pb-2 flex items-center justify-between">
+    <p id="resultCount" class="text-xs font-semibold text-slate-400"></p>
+    <button id="sortBtn" onclick="toggleSort()" class="text-xs font-semibold text-slate-400 flex items-center gap-1">
+      <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 6h18M6 12h12M10 18h4"/></svg>
+      <span id="sortLabel">Terbaru</span>
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div id="searchResults" class="px-4 space-y-3 pb-4">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<!-- ══════════════ PAGE: LAPORAN ══════════════ -->
+<div id="pageLaporan" class="hidden flex-1 pb-24 flex flex-col">
+
+  <!-- Inner tabs -->
+  <div class="inner-tab-bar sticky z-30" style="top:0;">
+    <div class="flex">
+      <button class="inner-tab active" id="itab-ringkasan" onclick="switchInnerTab('ringkasan')">Ringkasan</button>
+      <button class="inner-tab" id="itab-biaya" onclick="switchInnerTab('biaya')">Biaya</button>
+      <button class="inner-tab" id="itab-jadwal" onclick="switchInnerTab('jadwal')">Jadwal</button>
+      <button class="inner-tab" id="itab-followup" onclick="switchInnerTab('followup')">Tindak Lanjut</button>
+    </div>
+  </div>
+
+  <!-- Filter period -->
+  <div class="px-4 pt-3 pb-2 flex gap-2 overflow-x-auto" style="-webkit-overflow-scrolling:touch;">
+    <button class="chip active" data-period="all" onclick="setPeriod('all')">Semua</button>
+    <button class="chip" data-period="30" onclick="setPeriod('30')">30 Hari</button>
+    <button class="chip" data-period="90" onclick="setPeriod('90')">3 Bulan</button>
+    <button class="chip" data-period="180" onclick="setPeriod('180')">6 Bulan</button>
+    <button class="chip" data-period="365" onclick="setPeriod('365')">1 Tahun</button>
+  </div>
+
+  <!-- Inner panels -->
+  <div class="flex-1" id="laporanPanels">
+
+    <!-- RINGKASAN -->
+    <div id="lpanel-ringkasan" class="lpanel px-4 pt-2 pb-4 space-y-4">
+
+      <!-- Stat grid -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="stat-card">
+          <p class="stat-big" id="lsTotalServis">0</p>
+          <p class="stat-label">Total Servis</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-big" id="lsTotalBiaya" style="font-size:20px;">Rp 0</p>
+          <p class="stat-label">Total Biaya</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-big" id="lsAvgBiaya" style="font-size:20px;">Rp 0</p>
+          <p class="stat-label">Rata-rata/Servis</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-big" id="lsFollowup">0</p>
+          <p class="stat-label">Tindak Lanjut Aktif</p>
+        </div>
+      </div>
+
+      <!-- Top kendaraan -->
+      <div>
+        <p class="sec">Kendaraan Paling Sering Servis</p>
+        <div id="topKendaraanList" class="space-y-2"></div>
+      </div>
+
+      <!-- Top bengkel -->
+      <div>
+        <p class="sec">Bengkel Favorit</p>
+        <div id="topBengkelList" class="space-y-2"></div>
+      </div>
+
+      <!-- Export button -->
+      <button onclick="openExportModal()" class="btn-export w-full">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 15V3M7 10l5 5 5-5M4 20h16"/></svg>
+        Export Laporan PDF
+      </button>
+    </div>
+
+    <!-- BIAYA -->
+    <div id="lpanel-biaya" class="lpanel hidden px-4 pt-2 pb-4 space-y-4">
+      <!-- Bar chart: biaya per bulan -->
+      <div>
+        <p class="sec">Biaya per Bulan</p>
+        <div class="bg-white rounded-14px p-4" style="border-radius:14px;">
+          <div class="bar-chart-wrap">
+            <div id="barChart" class="flex items-end gap-1" style="height:120px;min-width:min-content;padding-bottom:0;"></div>
+          </div>
+          <div class="flex justify-between text-xs text-slate-400 mt-3 pt-3 border-t border-slate-50">
+            <span>Total: <b id="barTotal" class="text-slate-700">Rp 0</b></span>
+            <span>Tertinggi: <b id="barMax" class="text-orange-500">Rp 0</b></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Breakdown by kategori_biaya -->
+      <div>
+        <p class="sec">Breakdown per Kategori</p>
+        <div class="bg-white rounded-14px p-4 space-y-3" style="border-radius:14px;" id="kategoriBreakdown"></div>
+      </div>
+
+      <!-- Per kendaraan -->
+      <div>
+        <p class="sec">Biaya per Kendaraan</p>
+        <div id="biayaPerKendaraan" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- JADWAL -->
+    <div id="lpanel-jadwal" class="lpanel hidden px-4 pt-2 pb-4 space-y-4">
+
+      <!-- Summary status -->
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-white rounded-12px p-3 text-center" style="border-radius:12px;">
+          <p id="jadwalTerlambat" class="font-bold text-red-500" style="font-size:22px;">0</p>
+          <p class="text-xs text-slate-400 mt-0.5">Terlambat</p>
+        </div>
+        <div class="bg-white rounded-12px p-3 text-center" style="border-radius:12px;">
+          <p id="jadwalSegera" class="font-bold text-yellow-500" style="font-size:22px;">0</p>
+          <p class="text-xs text-slate-400 mt-0.5">Segera</p>
+        </div>
+        <div class="bg-white rounded-12px p-3 text-center" style="border-radius:12px;">
+          <p id="jadwalCek" class="font-bold text-blue-500" style="font-size:22px;">0</p>
+          <p class="text-xs text-slate-400 mt-0.5">Cek Kondisi</p>
+        </div>
+      </div>
+
+      <!-- All kendaraan jadwal table -->
+      <div>
+        <p class="sec">Status Jadwal Semua Kendaraan</p>
+        <div id="jadwalAllKend" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <!-- FOLLOWUP -->
+    <div id="lpanel-followup" class="lpanel hidden px-4 pt-2 pb-4 space-y-3">
+      <div class="flex items-center justify-between mb-1">
+        <p class="sec mb-0">Catatan Tindak Lanjut Aktif</p>
+        <span id="followupCount" class="badge badge-red">0</span>
+      </div>
+      <div id="followupList" class="space-y-2.5"></div>
+    </div>
+
+  </div><!-- /laporanPanels -->
+</div><!-- /pageLaporan -->
+
+<!-- ══════════════ BOTTOM NAV ══════════════ -->
+<nav class="bottom-nav fixed bottom-0 left-0 right-0 z-40 flex">
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('home')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1V10z"/><path stroke="currentColor" stroke-width="2" d="M9 21V12h6v9"/></svg>
+    <span style="font-size:10px;font-weight:500;">Home</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('servis')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3-3a1 1 0 000-1.4l-1.6-1.6a1 1 0 00-1.4 0l-3 3zM9 13l-4 4a2 2 0 002.8 2.8L12 16M9 13l2-2"/></svg>
+    <span style="font-size:10px;font-weight:500;">Servis</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#7C6FCD;">
+    <svg width="22" height="22" fill="#7C6FCD" viewBox="0 0 24 24"><circle fill="#7C6FCD" cx="11" cy="11" r="7"/><path stroke="white" stroke-width="2" stroke-linecap="round" d="M20 20l-4-4"/></svg>
+    <span style="font-size:10px;font-weight:600;color:#7C6FCD;">Cari</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('laporan')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect stroke="currentColor" stroke-width="2" x="3" y="3" width="18" height="18" rx="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 17v-5M12 17v-9M16 17v-3"/></svg>
+    <span style="font-size:10px;font-weight:500;">Laporan</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('admin')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><circle stroke="currentColor" stroke-width="2" cx="12" cy="12" r="3"/><path stroke="currentColor" stroke-width="2" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span style="font-size:10px;font-weight:500;">Admin</span>
+  </a>
+</nav>
+
+<!-- ══════════════ MODAL: EXPORT ══════════════ -->
+<div id="modalExport" class="hidden fixed inset-0 z-50 modal-bg">
+  <div class="modal-sheet">
+    <div class="sticky top-0 bg-white flex items-center justify-between px-5 py-4 border-b border-slate-100 z-10">
+      <p class="font-bold text-slate-800">Export Laporan PDF</p>
+      <button onclick="closeModal('modalExport')" class="text-slate-400 hover:text-slate-600 p-1">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-5 space-y-4">
+
+      <!-- Pilih kendaraan -->
+      <div>
+        <p class="text-sm font-semibold text-slate-700 mb-2">Kendaraan</p>
+        <div class="space-y-2" id="exportKendList"></div>
+      </div>
+
+      <!-- Pilih periode -->
+      <div>
+        <p class="text-sm font-semibold text-slate-700 mb-2">Periode</p>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="export-period-opt flex items-center gap-2 p-3 rounded-10px border-2 cursor-pointer transition-all" style="border-radius:10px;border-color:#E2E8F0;">
+            <input type="radio" name="exportPeriod" value="all" checked class="accent-orange-500"> <span class="text-sm font-medium">Semua</span>
+          </label>
+          <label class="export-period-opt flex items-center gap-2 p-3 rounded-10px border-2 cursor-pointer transition-all" style="border-radius:10px;border-color:#E2E8F0;">
+            <input type="radio" name="exportPeriod" value="365" class="accent-orange-500"> <span class="text-sm font-medium">1 Tahun</span>
+          </label>
+          <label class="export-period-opt flex items-center gap-2 p-3 rounded-10px border-2 cursor-pointer transition-all" style="border-radius:10px;border-color:#E2E8F0;">
+            <input type="radio" name="exportPeriod" value="180" class="accent-orange-500"> <span class="text-sm font-medium">6 Bulan</span>
+          </label>
+          <label class="export-period-opt flex items-center gap-2 p-3 rounded-10px border-2 cursor-pointer transition-all" style="border-radius:10px;border-color:#E2E8F0;">
+            <input type="radio" name="exportPeriod" value="90" class="accent-orange-500"> <span class="text-sm font-medium">3 Bulan</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Pilih konten -->
+      <div>
+        <p class="text-sm font-semibold text-slate-700 mb-2">Konten</p>
+        <div class="space-y-2">
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" id="expHistori" checked class="w-4 h-4 accent-orange-500">
+            <span class="text-sm text-slate-700">📋 Histori Servis</span>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" id="expJadwal" checked class="w-4 h-4 accent-orange-500">
+            <span class="text-sm text-slate-700">🔔 Status Jadwal Servis</span>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" id="expBiaya" checked class="w-4 h-4 accent-orange-500">
+            <span class="text-sm text-slate-700">💰 Ringkasan Biaya</span>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" id="expFollowup" checked class="w-4 h-4 accent-orange-500">
+            <span class="text-sm text-slate-700">📝 Tindak Lanjut</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- PDF preview mini -->
+      <div class="pdf-preview">
+        <svg width="36" height="36" fill="none" viewBox="0 0 24 24" class="mx-auto mb-2 text-slate-300"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M9 12h6M9 16h6M9 8h3M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9l-6-6z"/></svg>
+        <p class="text-sm font-semibold text-slate-500">Preview PDF</p>
+        <p class="text-xs text-slate-400 mt-1" id="pdfPreviewText">Pilih opsi di atas untuk melihat estimasi konten</p>
+      </div>
+
+      <button onclick="doExportPDF()" id="btnExport" class="btn-primary">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 15V3M7 10l5 5 5-5M4 20h16"/></svg>
+        <span id="exportLabel">Generate & Download PDF</span>
+        <span id="exportSpinner" class="hidden">
+          <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"/><path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8v8z"/></svg>
+          Generating…
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: INVOICE DETAIL ══════════════ -->
+<div id="modalInvoice" class="hidden fixed inset-0 z-50 modal-bg">
+  <div class="modal-sheet">
+    <div class="sticky top-0 bg-white flex items-center justify-between px-5 py-4 border-b border-slate-100 z-10">
+      <p class="font-bold text-slate-800">Detail Servis</p>
+      <button onclick="closeModal('modalInvoice')" class="text-slate-400 p-1">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="invoiceBody" class="p-5"></div>
+  </div>
+</div>
+
+<!-- ══════════════ TOAST ══════════════ -->
+<div id="toast" class="toast"></div>
+
+<!-- ══════════════ SCRIPT ══════════════ -->
+<script>
+// ─── MOCK DATA ─────────────────────────────────────────
+const ALL_KENDARAAN = [
+  {plat_nomor:'L 2345 ABC',merk:'Honda',model:'PCX 160',tahun:2022,pemilik:'Ayah',km_terakhir:12400,status:'Aktif'},
+  {plat_nomor:'L 6789 DEF',merk:'Yamaha',model:'Gear 125',tahun:2021,pemilik:'Bunda',km_terakhir:8900,status:'Aktif'},
+  {plat_nomor:'L 1010 GHI',merk:'Honda',model:'Jazz',tahun:2020,pemilik:'Keluarga',km_terakhir:34500,status:'Aktif'},
+];
+
+const ALL_HISTORI = [
+  {id:'SR006',plat:'L 2345 ABC',tanggal:'2025-05-10',km:12400,bengkel:'Ahass Sumber Motor — Rungkut',total:155000,followup:false,catatan_followup:'',catatan:'',input_oleh:'Ayah',items:[{nama:'Oli mesin',kat:'Oli/Cairan',biaya:65000},{nama:'Jasa servis',kat:'Jasa',biaya:35000},{nama:'Air radiator cek',kat:'Jasa',biaya:10000},{nama:'Filter udara',kat:'Jasa',biaya:15000},{nama:'Kampas rem cek',kat:'Jasa',biaya:30000}]},
+  {id:'SR005',plat:'L 6789 DEF',tanggal:'2025-04-20',km:8900,bengkel:'Bengkel Pak Hendra — Waru',total:120000,followup:true,catatan_followup:'V-belt mulai aus, ganti di servis berikutnya',catatan:'',input_oleh:'Bunda',items:[{nama:'Oli mesin',kat:'Oli/Cairan',biaya:65000},{nama:'Servis ringan',kat:'Jasa',biaya:35000},{nama:'Filter udara cek',kat:'Jasa',biaya:20000}]},
+  {id:'SR004',plat:'L 2345 ABC',tanggal:'2025-03-01',km:10800,bengkel:'Ahass Sumber Motor — Rungkut',total:215000,followup:true,catatan_followup:'Filter oli kotor, ganti servis berikutnya',catatan:'',input_oleh:'Bunda',items:[{nama:'Oli mesin',kat:'Oli/Cairan',biaya:65000},{nama:'Servis ringan',kat:'Jasa',biaya:50000},{nama:'Oli gardan',kat:'Oli/Cairan',biaya:45000},{nama:'Busi',kat:'Sparepart',biaya:30000},{nama:'Jasa pasang busi',kat:'Jasa',biaya:25000}]},
+  {id:'SR003',plat:'L 2345 ABC',tanggal:'2024-11-15',km:8000,bengkel:'Bengkel Pak Hendra — Waru',total:320000,followup:false,catatan_followup:'',catatan:'Servis berkala 8000km',input_oleh:'Ayah',items:[{nama:'Oli mesin',kat:'Oli/Cairan',biaya:65000},{nama:'Filter oli',kat:'Sparepart',biaya:25000},{nama:'Busi',kat:'Sparepart',biaya:30000},{nama:'Servis CVT',kat:'Jasa',biaya:100000},{nama:'Oli gardan',kat:'Oli/Cairan',biaya:45000},{nama:'Jasa servis',kat:'Jasa',biaya:55000}]},
+  {id:'SR002',plat:'L 1010 GHI',tanggal:'2024-10-05',km:32000,bengkel:'Auto 2000 — Ahmad Yani',total:580000,followup:false,catatan_followup:'',catatan:'',input_oleh:'Ayah',items:[{nama:'Oli mesin',kat:'Oli/Cairan',biaya:180000},{nama:'Filter oli',kat:'Sparepart',biaya:85000},{nama:'Servis berkala',kat:'Jasa',biaya:200000},{nama:'Air radiator',kat:'Oli/Cairan',biaya:75000},{nama:'Jasa',kat:'Jasa',biaya:40000}]},
+  {id:'SR001',plat:'L 2345 ABC',tanggal:'2024-07-20',km:6000,bengkel:'Ahass Sumber Motor — Rungkut',total:100000,followup:false,catatan_followup:'',catatan:'',input_oleh:'Ayah',items:[{nama:'Oli mesin',kat:'Oli/Cairan',biaya:65000},{nama:'Jasa ganti oli',kat:'Jasa',biaya:20000},{nama:'Servis ringan',kat:'Jasa',biaya:15000}]},
+  {id:'SR000',plat:'L 6789 DEF',tanggal:'2024-06-10',km:5000,bengkel:'Bengkel Pak Hendra — Waru',total:95000,followup:false,catatan_followup:'',catatan:'Ganti oli pertama',input_oleh:'Bunda',items:[{nama:'Oli mesin',kat:'Oli/Cairan',biaya:60000},{nama:'Jasa servis',kat:'Jasa',biaya:35000}]},
+];
+
+const ALL_JADWAL = [
+  {plat:'L 2345 ABC',parts:[
+    {nama:'Oli mesin',status:'Terlambat'},{nama:'Servis ringan',status:'Terlambat'},
+    {nama:'Filter oli',status:'Terlambat'},{nama:'Oli gardan',status:'Segera'},
+    {nama:'Air radiator',status:'Segera'},{nama:'Filter udara',status:'Aman'},
+    {nama:'Busi',status:'Aman'},{nama:'Servis CVT',status:'Aman'},
+    {nama:'V-belt',status:'Aman'},{nama:'Kampas rem',status:'Cek Kondisi'},
+  ]},
+  {plat:'L 6789 DEF',parts:[
+    {nama:'Oli mesin',status:'Segera'},{nama:'V-belt',status:'Segera'},
+    {nama:'Servis ringan',status:'Aman'},{nama:'Filter udara',status:'Aman'},
+    {nama:'Kampas rem',status:'Cek Kondisi'},{nama:'Ban',status:'Cek Kondisi'},
+  ]},
+  {plat:'L 1010 GHI',parts:[
+    {nama:'Oli mesin',status:'Aman'},{nama:'Filter oli',status:'Aman'},
+    {nama:'Busi',status:'Aman'},{nama:'Servis berkala',status:'Aman'},
+    {nama:'Kampas rem',status:'Cek Kondisi'},{nama:'Ban',status:'Cek Kondisi'},
+  ]},
+];
+
+// ─── APP STATE ─────────────────────────────────────────
+let activePage = 'search';
+let activeInnerTab = 'ringkasan';
+let activeFilter = 'semua';
+let activePeriod = 'all';
+let searchQuery = '';
+let sortDesc = true;
+let exportSelKend = new Set(ALL_KENDARAAN.map(k=>k.plat_nomor)); // all selected
+
+// ─── PAGE SWITCH ───────────────────────────────────────
+function switchPage(page) {
+  activePage = page;
+  document.getElementById('pageCari').classList.toggle('hidden', page!=='search');
+  document.getElementById('pageLaporan').classList.toggle('hidden', page!=='laporan');
+  document.querySelectorAll('.page-tab').forEach((b,i)=>{
+    b.classList.toggle('active', (page==='search'&&i===0)||(page==='laporan'&&i===1));
+  });
+  if (page==='laporan') renderLaporan();
+}
+
+// ─── SEARCH ────────────────────────────────────────────
+let searchTimer;
+function onSearchInput(q) {
+  searchQuery = q;
+  document.getElementById('searchClear').classList.toggle('hidden', !q);
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=>runSearch(), 180);
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  searchQuery = '';
+  document.getElementById('searchClear').classList.add('hidden');
+  runSearch();
+}
+
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.chip[data-filter]').forEach(c=>{
+    c.classList.toggle('active', c.dataset.filter===f);
+  });
+  runSearch();
+}
+
+function toggleSort() {
+  sortDesc = !sortDesc;
+  document.getElementById('sortLabel').textContent = sortDesc ? 'Terbaru' : 'Terlama';
+  runSearch();
+}
+
+function runSearch() {
+  const q = searchQuery.trim().toLowerCase();
+  const results = [];
+
+  // ─ Kendaraan ─
+  if (activeFilter==='semua'||activeFilter==='kendaraan') {
+    ALL_KENDARAAN.forEach(k=>{
+      const text = `${k.plat_nomor} ${k.merk} ${k.model} ${k.pemilik}`.toLowerCase();
+      if (!q || text.includes(q)) {
+        results.push({type:'kendaraan', score: k.plat_nomor, data:k, sortKey:'2099-12-31'});
+      }
+    });
+  }
+
+  // ─ Servis histori ─
+  if (activeFilter==='semua'||activeFilter==='servis') {
+    ALL_HISTORI.forEach(h=>{
+      const kend = ALL_KENDARAAN.find(k=>k.plat_nomor===h.plat);
+      const itemText = h.items.map(i=>i.nama).join(' ');
+      const text = `${h.plat} ${h.bengkel} ${itemText} ${h.catatan_followup} ${h.catatan} ${kend?.model||''}`.toLowerCase();
+      if (!q || text.includes(q)) {
+        results.push({type:'servis', data:h, kend, sortKey:h.tanggal});
+      }
+    });
+  }
+
+  // ─ Part / jadwal ─
+  if (activeFilter==='semua'||activeFilter==='part') {
+    ALL_JADWAL.forEach(j=>{
+      const kend = ALL_KENDARAAN.find(k=>k.plat_nomor===j.plat);
+      j.parts.forEach(p=>{
+        const text = `${p.nama} ${j.plat} ${kend?.model||''}`.toLowerCase();
+        if (q && text.includes(q)) {
+          results.push({type:'part', data:p, kend, jadwal:j, sortKey:'2050-01-01'});
+        }
+      });
+    });
+  }
+
+  // ─ Bengkel ─
+  if (activeFilter==='semua'||activeFilter==='bengkel') {
+    const bengkelSet = {};
+    ALL_HISTORI.forEach(h=>{
+      const text = h.bengkel.toLowerCase();
+      if (!q || text.includes(q)) {
+        if (!bengkelSet[h.bengkel]) bengkelSet[h.bengkel] = {count:0,total:0,lastDate:h.tanggal};
+        bengkelSet[h.bengkel].count++;
+        bengkelSet[h.bengkel].total += h.total;
+        if (h.tanggal > bengkelSet[h.bengkel].lastDate) bengkelSet[h.bengkel].lastDate = h.tanggal;
+      }
+    });
+    Object.entries(bengkelSet).forEach(([nama,info])=>{
+      results.push({type:'bengkel', data:{nama,...info}, sortKey:info.lastDate});
+    });
+  }
+
+  // Sort
+  results.sort((a,b)=>{
+    const cmp = a.sortKey > b.sortKey ? -1 : a.sortKey < b.sortKey ? 1 : 0;
+    return sortDesc ? cmp : -cmp;
+  });
+
+  renderResults(results, q);
+}
+
+function renderResults(results, q) {
+  const wrap = document.getElementById('searchResults');
+  wrap.innerHTML = '';
+
+  const servisCount = results.filter(r=>r.type==='servis').length;
+  const total = results.length;
+  document.getElementById('resultCount').textContent =
+    q ? `${total} hasil untuk "${searchQuery}"` :
+    activeFilter==='semua' ? `Semua data (${total} item)` : `${total} item`;
+
+  if (!results.length) {
+    wrap.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🔍</div>
+        <p class="font-bold text-slate-600 mb-1">Tidak ditemukan</p>
+        <p class="text-sm text-slate-400">Coba kata kunci lain atau ganti filter</p>
+      </div>`;
+    return;
+  }
+
+  // Group by type for sections
+  const groups = {};
+  results.forEach(r=>{ (groups[r.type]=groups[r.type]||[]).push(r); });
+
+  const typeOrder = ['kendaraan','servis','part','bengkel'];
+  typeOrder.forEach(type=>{
+    if (!groups[type]) return;
+    const g = groups[type];
+
+    // Section label
+    const labels = {kendaraan:'🚗 Kendaraan',servis:'🔧 Histori Servis',part:'⚙️ Part / Jadwal',bengkel:'🏪 Bengkel'};
+    const sec = document.createElement('p');
+    sec.className = 'sec mt-2';
+    sec.textContent = labels[type];
+    wrap.appendChild(sec);
+
+    g.forEach((r, idx)=>{
+      const card = document.createElement('div');
+      card.className = 'result-card fade-up';
+      card.style.animationDelay = (idx*0.04)+'s';
+
+      if (r.type==='kendaraan') {
+        card.onclick = ()=>navToKendaraan(r.data.plat_nomor);
+        card.innerHTML = `
+          <div class="result-header">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-bold text-slate-800 text-base">${hl(r.data.merk+' '+r.data.model,q)} <span class="text-slate-400 font-normal text-sm">${r.data.tahun}</span></p>
+                <p class="mono text-xs text-slate-400 mt-0.5">${hl(r.data.plat_nomor,q)} • ${r.data.pemilik}</p>
+              </div>
+              <div class="text-right">
+                <p class="mono font-bold text-slate-700 text-sm">${r.data.km_terakhir.toLocaleString('id-ID')} km</p>
+                <p class="text-xs text-green-600 font-semibold">${r.data.status}</p>
+              </div>
+            </div>
+          </div>
+          <div class="result-items">
+            <p class="text-xs text-slate-400">Tap untuk lihat detail kendaraan →</p>
+          </div>
+        `;
+      }
+
+      else if (r.type==='servis') {
+        const h = r.data;
+        card.onclick = ()=>openInvoice(h.id);
+        card.innerHTML = `
+          <div class="result-header">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="font-bold text-slate-800">${hl(r.kend?.model||h.plat,q)} <span class="mono text-xs text-slate-400">${h.plat}</span></p>
+                <p class="text-xs text-slate-400 mt-0.5">${fmtDate(h.tanggal)} • ${hl(h.bengkel,q)}</p>
+              </div>
+              <div class="text-right flex-shrink-0 ml-2">
+                <p class="font-bold text-sm" style="color:var(--orange);">${rp(h.total)}</p>
+                <p class="mono text-xs text-slate-400">${h.km.toLocaleString('id-ID')} km</p>
+              </div>
+            </div>
+            ${h.followup?`<div class="mt-2 px-2.5 py-1.5 rounded-8px" style="background:#FFF7ED;border-radius:8px;"><p class="text-xs text-orange-600 font-semibold">📝 ${hl(h.catatan_followup||'Ada tindak lanjut',q)}</p></div>`:''}
+          </div>
+          <div class="result-items">
+            ${h.items.slice(0,3).map(i=>`
+              <div class="result-item-row">
+                <span class="text-slate-500">${hl(i.nama,q)}</span>
+                <span class="font-semibold text-slate-700">${rp(i.biaya)}</span>
+              </div>`).join('')}
+            ${h.items.length>3?`<p class="text-xs text-slate-400 pt-1">+${h.items.length-3} item lagi</p>`:''}
+          </div>
+        `;
+      }
+
+      else if (r.type==='part') {
+        const p = r.data;
+        const statusColor = {Terlambat:'#B91C1C',Segera:'#92400E',Aman:'#15803D','Cek Kondisi':'#1D4ED8'}[p.status]||'#64748B';
+        card.onclick = ()=>navToKendaraan(r.jadwal.plat,'pengingat');
+        card.innerHTML = `
+          <div class="result-header">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-bold text-slate-800">${hl(p.nama,q)}</p>
+                <p class="text-xs text-slate-400 mt-0.5">${hl(r.kend?.model||r.jadwal.plat,q)} • ${r.jadwal.plat}</p>
+              </div>
+              <span style="font-size:12px;font-weight:700;color:${statusColor};background:${statusBg(p.status)};border-radius:20px;padding:3px 10px;">${p.status}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      else if (r.type==='bengkel') {
+        const b = r.data;
+        card.innerHTML = `
+          <div class="result-header">
+            <div class="flex items-center justify-between">
+              <p class="font-bold text-slate-800">${hl(b.nama,q)}</p>
+              <span class="badge badge-blue">${b.count}x servis</span>
+            </div>
+            <div class="flex gap-4 mt-2 text-xs text-slate-400">
+              <span>Total: <b class="text-slate-600">${rp(b.total)}</b></span>
+              <span>Terakhir: <b class="text-slate-600">${fmtDateShort(b.lastDate)}</b></span>
+            </div>
+          </div>
+        `;
+      }
+
+      wrap.appendChild(card);
+    });
+  });
+}
+
+// ─── LAPORAN ───────────────────────────────────────────
+function switchInnerTab(tab) {
+  activeInnerTab = tab;
+  document.querySelectorAll('.inner-tab').forEach(b=>{
+    b.classList.toggle('active', b.id==='itab-'+tab);
+  });
+  document.querySelectorAll('.lpanel').forEach(p=>{
+    p.classList.toggle('hidden', p.id!=='lpanel-'+tab);
+  });
+  renderLaporan();
+}
+
+function setPeriod(p) {
+  activePeriod = p;
+  document.querySelectorAll('.chip[data-period]').forEach(c=>{
+    c.classList.toggle('active', c.dataset.period===p);
+  });
+  renderLaporan();
+}
+
+function filteredHistori() {
+  if (activePeriod==='all') return ALL_HISTORI;
+  const days = parseInt(activePeriod);
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-days);
+  return ALL_HISTORI.filter(h=>new Date(h.tanggal)>=cutoff);
+}
+
+function renderLaporan() {
+  const data = filteredHistori();
+  if (activeInnerTab==='ringkasan') renderRingkasan(data);
+  else if (activeInnerTab==='biaya') renderBiaya(data);
+  else if (activeInnerTab==='jadwal') renderJadwal();
+  else if (activeInnerTab==='followup') renderFollowup(data);
+}
+
+function renderRingkasan(data) {
+  const total = data.reduce((s,h)=>s+h.total,0);
+  const followupCount = data.filter(h=>h.followup).length;
+  document.getElementById('lsTotalServis').textContent = data.length;
+  document.getElementById('lsTotalBiaya').textContent = rp(total);
+  document.getElementById('lsAvgBiaya').textContent = data.length ? rp(Math.round(total/data.length)) : 'Rp 0';
+  document.getElementById('lsFollowup').textContent = followupCount;
+
+  // Top kendaraan
+  const byKend = {};
+  data.forEach(h=>{
+    byKend[h.plat] = byKend[h.plat]||{count:0,total:0,plat:h.plat};
+    byKend[h.plat].count++; byKend[h.plat].total+=h.total;
+  });
+  const topKend = Object.values(byKend).sort((a,b)=>b.count-a.count).slice(0,3);
+  const maxKend = topKend[0]?.count||1;
+  document.getElementById('topKendaraanList').innerHTML = topKend.map(k=>{
+    const kend = ALL_KENDARAAN.find(x=>x.plat_nomor===k.plat);
+    return `
+      <div class="bg-white rounded-12px p-3 cursor-pointer" style="border-radius:12px;" onclick="navToKendaraan('${k.plat}')">
+        <div class="flex items-center justify-between mb-2">
+          <p class="font-semibold text-slate-800 text-sm">${kend?.model||k.plat}</p>
+          <div class="text-right">
+            <span class="font-bold text-sm" style="color:var(--orange);">${k.count}x</span>
+            <span class="text-xs text-slate-400 ml-1">${rp(k.total)}</span>
+          </div>
+        </div>
+        <div style="background:#E8EEF6;border-radius:99px;height:6px;overflow:hidden;">
+          <div style="height:100%;border-radius:99px;background:var(--orange);width:${(k.count/maxKend)*100}%;transition:width 1s ease;"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Top bengkel
+  const byBengkel = {};
+  data.forEach(h=>{
+    const key = h.bengkel; byBengkel[key]=byBengkel[key]||{count:0,total:0};
+    byBengkel[key].count++; byBengkel[key].total+=h.total;
+  });
+  const topBengkel = Object.entries(byBengkel).sort((a,b)=>b[1].count-a[1].count).slice(0,3);
+  document.getElementById('topBengkelList').innerHTML = topBengkel.map(([nama,info])=>`
+    <div class="bg-white rounded-12px p-3 flex items-center justify-between" style="border-radius:12px;">
+      <div>
+        <p class="font-semibold text-slate-800 text-sm">${nama.split(' — ')[0]}</p>
+        <p class="text-xs text-slate-400">${nama.split(' — ')[1]||''}</p>
+      </div>
+      <div class="text-right">
+        <p class="font-bold text-sm text-slate-700">${info.count}x</p>
+        <p class="text-xs text-slate-400">${rp(info.total)}</p>
+      </div>
+    </div>`).join('');
+}
+
+function renderBiaya(data) {
+  // Bar chart: group by month
+  const byMonth = {};
+  data.forEach(h=>{
+    const m = h.tanggal.substring(0,7); // YYYY-MM
+    byMonth[m] = (byMonth[m]||0)+h.total;
+  });
+  const months = Object.keys(byMonth).sort().slice(-12); // last 12 months
+  const maxVal = Math.max(...months.map(m=>byMonth[m]),1);
+  const totalAll = months.reduce((s,m)=>s+byMonth[m],0);
+
+  document.getElementById('barTotal').textContent = rp(totalAll);
+  document.getElementById('barMax').textContent = rp(Math.max(...months.map(m=>byMonth[m]),0));
+
+  const bar = document.getElementById('barChart');
+  bar.innerHTML = months.map((m,i)=>{
+    const val = byMonth[m];
+    const height = Math.round((val/maxVal)*96);
+    const [y,mo] = m.split('-');
+    const moNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+    const label = moNames[parseInt(mo)-1];
+    const isMax = val===maxVal;
+    return `
+      <div class="bar-col">
+        <div class="bar-value">${val>=100000?Math.round(val/1000)+'rb':''}</div>
+        <div class="bar-fill" style="height:${height}px;background:${isMax?'var(--orange)':'#CBD5E1'};" title="${label} ${y}: ${rp(val)}" onclick="showToast('${label}: ${rp(val)}')"></div>
+        <div class="bar-label">${label}</div>
+      </div>`;
+  }).join('');
+
+  // Kategori breakdown
+  const byKat = {};
+  data.forEach(h=>h.items.forEach(i=>{
+    byKat[i.kat]=(byKat[i.kat]||0)+i.biaya;
+  }));
+  const totalKat = Object.values(byKat).reduce((s,v)=>s+v,0)||1;
+  const katColors = {'Oli/Cairan':'#3B82F6','Sparepart':'#F59E0B','Jasa':'#22C55E','Ban':'#F05E0E','Emergency':'#EF4444'};
+  document.getElementById('kategoriBreakdown').innerHTML = Object.entries(byKat)
+    .sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+    <div>
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-sm font-semibold text-slate-700">${k}</span>
+        <span class="text-sm font-bold text-slate-800">${rp(v)} <span class="text-xs font-normal text-slate-400">(${Math.round(v/totalKat*100)}%)</span></span>
+      </div>
+      <div style="background:#E8EEF6;border-radius:99px;height:7px;overflow:hidden;">
+        <div style="height:100%;border-radius:99px;background:${katColors[k]||'#94A3B8'};width:${Math.round(v/totalKat*100)}%;transition:width 1s ease;"></div>
+      </div>
+    </div>`).join('');
+
+  // Per kendaraan
+  const byKend = {};
+  data.forEach(h=>{ byKend[h.plat]=(byKend[h.plat]||0)+h.total; });
+  document.getElementById('biayaPerKendaraan').innerHTML = Object.entries(byKend)
+    .sort((a,b)=>b[1]-a[1]).map(([plat,total])=>{
+      const k=ALL_KENDARAAN.find(x=>x.plat_nomor===plat);
+      return `
+        <div class="bg-white rounded-12px p-3 flex items-center justify-between" style="border-radius:12px;">
+          <div>
+            <p class="font-semibold text-slate-800 text-sm">${k?.model||plat}</p>
+            <p class="mono text-xs text-slate-400">${plat}</p>
+          </div>
+          <p class="font-bold" style="color:var(--orange);">${rp(total)}</p>
+        </div>`;
+    }).join('');
+}
+
+function renderJadwal() {
+  let terlambat=0,segera=0,cek=0;
+  ALL_JADWAL.forEach(j=>j.parts.forEach(p=>{
+    if(p.status==='Terlambat')terlambat++;
+    else if(p.status==='Segera')segera++;
+    else if(p.status==='Cek Kondisi')cek++;
+  }));
+  document.getElementById('jadwalTerlambat').textContent=terlambat;
+  document.getElementById('jadwalSegera').textContent=segera;
+  document.getElementById('jadwalCek').textContent=cek;
+
+  document.getElementById('jadwalAllKend').innerHTML = ALL_JADWAL.map(j=>{
+    const k=ALL_KENDARAAN.find(x=>x.plat_nomor===j.plat);
+    const urgent=j.parts.filter(p=>p.status==='Terlambat'||p.status==='Segera');
+    const aman=j.parts.filter(p=>p.status==='Aman');
+    return `
+      <div class="bg-white rounded-14px overflow-hidden" style="border-radius:14px;" onclick="navToKendaraan('${j.plat}','pengingat')">
+        <div class="flex items-center justify-between p-3 border-b border-slate-50">
+          <div>
+            <p class="font-bold text-slate-800 text-sm">${k?.model||j.plat}</p>
+            <p class="mono text-xs text-slate-400">${j.plat}</p>
+          </div>
+          <div class="flex gap-1.5">
+            ${j.parts.filter(p=>p.status==='Terlambat').length?`<span class="badge badge-red">${j.parts.filter(p=>p.status==='Terlambat').length} Terlambat</span>`:''}
+            ${j.parts.filter(p=>p.status==='Segera').length?`<span class="badge badge-orange">${j.parts.filter(p=>p.status==='Segera').length} Segera</span>`:''}
+          </div>
+        </div>
+        ${urgent.map(p=>`
+          <div class="flex items-center justify-between px-3 py-2 border-b border-slate-50 ${p.status==='Terlambat'?'bg-red-50':'bg-yellow-50'}">
+            <span class="text-sm font-semibold ${p.status==='Terlambat'?'text-red-700':'text-yellow-700'}">${p.nama}</span>
+            <span class="text-xs font-bold ${p.status==='Terlambat'?'text-red-500':'text-yellow-500'}">${p.status}</span>
+          </div>`).join('')}
+        <div class="px-3 py-2 text-xs text-slate-400">${aman.length} part aman • ${j.parts.filter(p=>p.status==='Cek Kondisi').length} perlu cek fisik</div>
+      </div>`;
+  }).join('');
+}
+
+function renderFollowup(data) {
+  const items = data.filter(h=>h.followup);
+  document.getElementById('followupCount').textContent = items.length;
+  document.getElementById('followupList').innerHTML = items.length ? items.map(h=>{
+    const k=ALL_KENDARAAN.find(x=>x.plat_nomor===h.plat);
+    return `
+      <div class="followup-card cursor-pointer" onclick="openInvoice('${h.id}')">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <p class="font-semibold text-slate-800 text-sm">${k?.model||h.plat} <span class="mono text-xs font-normal text-slate-400">${h.plat}</span></p>
+            <p class="text-xs text-slate-400 mt-0.5">${fmtDateShort(h.tanggal)} • ${h.bengkel.split(' — ')[0]}</p>
+            <p class="text-xs text-orange-600 font-semibold mt-1.5">📝 ${h.catatan_followup||'Ada catatan tindak lanjut'}</p>
+          </div>
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" class="flex-shrink-0 mt-1 text-slate-300"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>`;
+  }).join('') : '<div class="text-center py-8 text-slate-400 text-sm">Tidak ada tindak lanjut aktif 🎉</div>';
+}
+
+// ─── INVOICE MODAL ─────────────────────────────────────
+function openInvoice(id) {
+  const h = ALL_HISTORI.find(x=>x.id===id);
+  if (!h) return;
+  const k = ALL_KENDARAAN.find(x=>x.plat_nomor===h.plat);
+  document.getElementById('invoiceBody').innerHTML = `
+    <div class="space-y-4">
+      <div class="rounded-12px p-4" style="background:#EEF2F8;border-radius:12px;">
+        <p class="font-bold text-slate-800">${k?.merk} ${k?.model} <span class="mono text-xs font-normal text-slate-500">${h.plat}</span></p>
+        <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
+          <div><p class="text-xs text-slate-400">Tanggal</p><p class="font-semibold">${fmtDate(h.tanggal)}</p></div>
+          <div><p class="text-xs text-slate-400">KM</p><p class="font-semibold mono">${h.km.toLocaleString('id-ID')} km</p></div>
+          <div class="col-span-2"><p class="text-xs text-slate-400">Bengkel</p><p class="font-semibold">${h.bengkel}</p></div>
+        </div>
+      </div>
+      <div>
+        <p class="sec">Item Servis</p>
+        <div style="border:1.5px solid #E8EEF6;border-radius:12px;overflow:hidden;">
+          ${h.items.map(i=>`
+            <div style="display:grid;grid-template-columns:1fr auto;padding:10px 14px;border-bottom:1px solid #F8FAFC;">
+              <div><p style="font-size:13px;font-weight:600;">${i.nama}</p><p style="font-size:11px;color:#94A3B8;">${i.kat}</p></div>
+              <span style="font-size:13px;font-weight:700;align-self:center;">${rp(i.biaya)}</span>
+            </div>`).join('')}
+          <div style="display:grid;grid-template-columns:1fr auto;padding:11px 14px;background:#FFF4EF;">
+            <span style="font-weight:700;color:#C2410C;">Total</span>
+            <span style="font-size:16px;font-weight:800;color:var(--orange);">${rp(h.total)}</span>
+          </div>
+        </div>
+      </div>
+      ${h.followup?`<div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:12px;padding:14px;">
+        <p style="font-size:12px;font-weight:700;color:#C2410C;margin-bottom:6px;">📝 Tindak Lanjut</p>
+        <p style="font-size:13px;color:#9A3412;">${h.catatan_followup}</p></div>`:''}
+      ${h.catatan?`<div><p class="sec">Catatan</p><p style="font-size:13px;color:#64748B;background:#F8FAFC;padding:12px;border-radius:10px;">${h.catatan}</p></div>`:''}
+      <p style="font-size:11px;color:#B0B8C8;text-align:right;">ID: ${h.id} • Dicatat oleh: ${h.input_oleh}</p>
+    </div>`;
+  show('modalInvoice');
+}
+
+// ─── EXPORT PDF ────────────────────────────────────────
+function openExportModal() {
+  // Build kendaraan checkboxes
+  document.getElementById('exportKendList').innerHTML = ALL_KENDARAAN.map(k=>`
+    <label class="flex items-center gap-3 cursor-pointer p-2.5 rounded-10px border border-slate-100 bg-slate-50" style="border-radius:10px;">
+      <input type="checkbox" name="exportKend" value="${k.plat_nomor}" checked class="w-4 h-4 accent-orange-500" onchange="updatePdfPreview()">
+      <div>
+        <p class="text-sm font-semibold text-slate-700">${k.merk} ${k.model}</p>
+        <p class="mono text-xs text-slate-400">${k.plat_nomor}</p>
+      </div>
+    </label>`).join('');
+  updatePdfPreview();
+  show('modalExport');
+}
+
+function updatePdfPreview() {
+  const selKend = [...document.querySelectorAll('input[name=exportKend]:checked')].map(x=>x.value);
+  const period = document.querySelector('input[name=exportPeriod]:checked')?.value||'all';
+  const inclHistori = document.getElementById('expHistori')?.checked;
+  const inclJadwal = document.getElementById('expJadwal')?.checked;
+  const inclBiaya = document.getElementById('expBiaya')?.checked;
+  const inclFollowup = document.getElementById('expFollowup')?.checked;
+
+  const pages = [];
+  if (inclHistori) pages.push('Halaman Histori Servis');
+  if (inclJadwal) pages.push('Halaman Status Jadwal');
+  if (inclBiaya) pages.push('Halaman Ringkasan Biaya');
+  if (inclFollowup) pages.push('Halaman Tindak Lanjut');
+
+  document.getElementById('pdfPreviewText').textContent =
+    `${selKend.length} kendaraan • ${period==='all'?'Semua data':period+' hari terakhir'} • ${pages.length} halaman`;
+}
+
+async function doExportPDF() {
+  document.getElementById('exportLabel').classList.add('hidden');
+  document.getElementById('exportSpinner').classList.remove('hidden');
+  document.getElementById('btnExport').disabled = true;
+
+  // Build PDF content as HTML, then trigger print
+  const selKend = [...document.querySelectorAll('input[name=exportKend]:checked')].map(x=>x.value);
+  const period = document.querySelector('input[name=exportPeriod]:checked')?.value||'all';
+  const inclHistori = document.getElementById('expHistori').checked;
+  const inclJadwal = document.getElementById('expJadwal').checked;
+  const inclBiaya = document.getElementById('expBiaya').checked;
+  const inclFollowup = document.getElementById('expFollowup').checked;
+
+  const days = period==='all' ? null : parseInt(period);
+  const cutoff = days ? new Date(Date.now()-days*86400000) : null;
+  const data = ALL_HISTORI.filter(h=>
+    selKend.includes(h.plat) && (!cutoff||new Date(h.tanggal)>=cutoff)
+  );
+
+  await sleep(800); // simulate generation
+
+  const html = buildPDFHtml({data, selKend, inclHistori, inclJadwal, inclBiaya, inclFollowup});
+
+  // Open in new window for print/save
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+    setTimeout(()=>win.print(), 500);
+  } else {
+    showToast('Pop-up diblokir. Izinkan pop-up untuk download PDF.', 'err');
+  }
+
+  document.getElementById('exportLabel').classList.remove('hidden');
+  document.getElementById('exportSpinner').classList.add('hidden');
+  document.getElementById('btnExport').disabled = false;
+  closeModal('modalExport');
+  showToast('PDF siap! Gunakan "Save as PDF" di dialog print.', 'ok');
+}
+
+function buildPDFHtml({data, selKend, inclHistori, inclJadwal, inclBiaya, inclFollowup}) {
+  const today = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  const totalBiaya = data.reduce((s,h)=>s+h.total,0);
+  const kendList = selKend.map(p=>ALL_KENDARAAN.find(k=>k.plat_nomor===p)).filter(Boolean);
+
+  let sections = '';
+
+  if (inclBiaya) {
+    sections += `
+      <div class="section">
+        <h2>💰 Ringkasan Biaya</h2>
+        <table><thead><tr><th>Kendaraan</th><th>Jumlah Servis</th><th>Total Biaya</th></tr></thead><tbody>
+        ${selKend.map(p=>{
+          const kend = ALL_KENDARAAN.find(k=>k.plat_nomor===p);
+          const hdata = data.filter(h=>h.plat===p);
+          return `<tr><td>${kend?.model||p} (${p})</td><td>${hdata.length}x</td><td><b>${rp(hdata.reduce((s,h)=>s+h.total,0))}</b></td></tr>`;
+        }).join('')}
+        <tr style="font-weight:bold;background:#FFF4EF;"><td>TOTAL</td><td>${data.length}x</td><td>${rp(totalBiaya)}</td></tr>
+        </tbody></table>
+      </div>`;
+  }
+
+  if (inclHistori) {
+    sections += `
+      <div class="section">
+        <h2>📋 Histori Servis</h2>
+        ${data.map(h=>{
+          const k=ALL_KENDARAAN.find(x=>x.plat_nomor===h.plat);
+          return `
+            <div class="invoice">
+              <div class="invoice-head">
+                <b>${k?.merk} ${k?.model}</b> — ${h.plat} &nbsp;|&nbsp; ${fmtDate(h.tanggal)} &nbsp;|&nbsp; <span class="mono">${h.km.toLocaleString('id-ID')} km</span> &nbsp;|&nbsp; ${h.bengkel}
+              </div>
+              <table style="margin:0;"><thead><tr><th>Item</th><th>Kategori</th><th>Biaya</th></tr></thead><tbody>
+              ${h.items.map(i=>`<tr><td>${i.nama}</td><td>${i.kat}</td><td>${rp(i.biaya)}</td></tr>`).join('')}
+              <tr class="total-row"><td colspan="2"><b>Total</b></td><td><b>${rp(h.total)}</b></td></tr>
+              </tbody></table>
+              ${h.followup?`<div class="followup-note">📝 Tindak Lanjut: ${h.catatan_followup}</div>`:''}
+            </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  if (inclJadwal) {
+    sections += `
+      <div class="section">
+        <h2>🔔 Status Jadwal Servis</h2>
+        ${ALL_JADWAL.filter(j=>selKend.includes(j.plat)).map(j=>{
+          const k=ALL_KENDARAAN.find(x=>x.plat_nomor===j.plat);
+          return `
+            <h3>${k?.merk} ${k?.model} — ${j.plat}</h3>
+            <table><thead><tr><th>Part</th><th>Status</th></tr></thead><tbody>
+            ${j.parts.map(p=>`<tr><td>${p.nama}</td><td style="color:${{Terlambat:'#B91C1C',Segera:'#92400E',Aman:'#15803D','Cek Kondisi':'#1D4ED8'}[p.status]};font-weight:bold;">${p.status}</td></tr>`).join('')}
+            </tbody></table>`;
+        }).join('')}
+      </div>`;
+  }
+
+  if (inclFollowup) {
+    const items = data.filter(h=>h.followup);
+    sections += `
+      <div class="section">
+        <h2>📝 Tindak Lanjut Aktif</h2>
+        ${items.length ? items.map(h=>{
+          const k=ALL_KENDARAAN.find(x=>x.plat_nomor===h.plat);
+          return `<div class="followup-note"><b>${k?.model||h.plat}</b> (${fmtDateShort(h.tanggal)}): ${h.catatan_followup}</div>`;
+        }).join('') : '<p>Tidak ada tindak lanjut aktif.</p>'}
+      </div>`;
+  }
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Laporan Garasi IdR — ${today}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:#1E293B;padding:24px 28px;line-height:1.5;}
+  h1{font-size:20px;font-weight:800;color:#0F1F4B;margin-bottom:4px;}
+  .meta{font-size:12px;color:#94A3B8;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid #E8EEF6;}
+  h2{font-size:15px;font-weight:700;color:#0F1F4B;margin:20px 0 10px;padding:8px 12px;background:#EEF2F8;border-radius:6px;}
+  h3{font-size:13px;font-weight:700;color:#475569;margin:14px 0 6px;}
+  .section{margin-bottom:24px;}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;}
+  th{background:#F1F5F9;padding:7px 10px;text-align:left;font-weight:700;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;}
+  td{padding:7px 10px;border-bottom:1px solid #F8FAFC;}
+  .total-row{background:#FFF4EF;}
+  .total-row td{font-weight:700;color:#F05E0E;}
+  .invoice{border:1.5px solid #E8EEF6;border-radius:8px;margin-bottom:12px;overflow:hidden;}
+  .invoice-head{background:#F8FAFC;padding:9px 12px;font-size:12px;border-bottom:1px solid #E8EEF6;}
+  .followup-note{background:#FFF7ED;border-left:3px solid #F97316;padding:8px 12px;margin:6px 0;border-radius:0 6px 6px 0;font-size:12px;color:#9A3412;}
+  .mono{font-family:monospace;}
+  @media print{body{padding:16px;} @page{margin:1cm;size:A4;}}
+</style>
+</head><body>
+  <h1>🚗 Laporan Garasi IdR</h1>
+  <div class="meta">
+    Digenerate: ${today} &nbsp;•&nbsp; Kendaraan: ${kendList.map(k=>k.model).join(', ')} &nbsp;•&nbsp; Total biaya: ${rp(totalBiaya)}
+  </div>
+  ${sections}
+</body></html>`;
+}
+
+// ─── HELPERS ───────────────────────────────────────────
+function hl(text, q) {
+  if (!q || !text) return text||'';
+  const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return String(text).replace(regex, '<mark class="hl">$1</mark>');
+}
+function statusBg(s){return{Terlambat:'#FEE2E2',Segera:'#FEF9C3',Aman:'#DCFCE7','Cek Kondisi':'#DBEAFE'}[s]||'#F1F5F9';}
+function rp(n){return 'Rp '+Math.floor(n||0).toLocaleString('id-ID');}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});}
+function fmtDateShort(d){if(!d)return'—';return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});}
+function show(id){document.getElementById(id)?.classList.remove('hidden');}
+function hide(id){document.getElementById(id)?.classList.add('hidden');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function closeModal(id){hide(id);}
+function navTo(p){showToast('→ '+p);}
+function navToKendaraan(plat,tab='info'){showToast(`→ Detail ${plat} [${tab}]`);}
+
+let _tt;
+function showToast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className=`toast show ${type}`;
+  clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// Modal close on bg
+['modalExport','modalInvoice'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('click',e=>{if(e.target.id===id)closeModal(id);});
+});
+
+// ─── BOOT ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  runSearch(); // show all on load
+
+  // Check URL for page param: ?page=laporan
+  const p = new URLSearchParams(window.location.search).get('page');
+  if (p==='laporan') switchPage('laporan');
+});
+</script>
+</body>
+</html>

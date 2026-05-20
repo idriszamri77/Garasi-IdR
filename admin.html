@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Garasi IdR — Admin & Onboarding</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange:#F05E0E; --navy:#0F1F4B; --navy2:#162660;
+  --green:#22C55E; --yellow:#F59E0B; --red:#EF4444;
+  --blue:#3B82F6; --gray:#9CA3AF; --bg:#EEF2F8;
+}
+*{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}
+html,body{background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;color:#1E293B;overscroll-behavior:none;height:100%;}
+.display{font-family:'Syne',sans-serif;}
+.mono{font-family:'JetBrains Mono',monospace;}
+
+/* ── App shell ── */
+.app{max-width:430px;margin:0 auto;min-height:100dvh;background:var(--bg);position:relative;display:flex;flex-direction:column;}
+
+/* ── Header ── */
+.header{height:56px;background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(15,31,75,.35);}
+.header-back{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;}
+.header-back:active{background:rgba(255,255,255,.2);}
+
+/* ── Bottom Nav ── */
+.bottom-nav{height:64px;background:#fff;border-top:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-around;padding:0 4px;position:sticky;bottom:0;z-index:100;flex-shrink:0;}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px;cursor:pointer;border-radius:12px;transition:background .15s;min-width:52px;}
+.nav-item:active{background:#F1F5F9;}
+.nav-icon{font-size:20px;line-height:1;}
+.nav-label{font-size:10px;font-weight:600;letter-spacing:0.01em;}
+.nav-item[data-tab="home"] .nav-icon,.nav-item[data-tab="home"] .nav-label{color:#B0B8C8;}
+.nav-item[data-tab="servis"] .nav-icon,.nav-item[data-tab="servis"] .nav-label{color:#B0B8C8;}
+.nav-item[data-tab="cari"] .nav-icon,.nav-item[data-tab="cari"] .nav-label{color:#B0B8C8;}
+.nav-item[data-tab="laporan"] .nav-icon,.nav-item[data-tab="laporan"] .nav-label{color:#B0B8C8;}
+.nav-item.active[data-tab="admin"] .nav-icon,.nav-item.active[data-tab="admin"] .nav-label{color:#888EA8;}
+
+/* ── Pages ── */
+.page{display:none;flex:1;overflow-y:auto;padding-bottom:80px;}
+.page.active{display:flex;flex-direction:column;}
+
+/* ── Onboarding screens ── */
+.onboard-screen{display:none;flex:1;flex-direction:column;}
+.onboard-screen.active{display:flex;}
+.onboard-progress{display:flex;gap:6px;padding:20px 20px 0;}
+.onboard-dot{height:4px;border-radius:99px;transition:all .4s;background:#E2E8F0;flex:1;}
+.onboard-dot.done{background:var(--orange);}
+.onboard-dot.active{background:var(--navy);}
+.onboard-hero{padding:32px 24px 16px;text-align:center;}
+.onboard-icon{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--navy),var(--navy2));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(15,31,75,.3);}
+.onboard-body{padding:0 20px;flex:1;}
+.onboard-footer{padding:16px 20px 24px;}
+
+/* ── PIN input ── */
+.pin-boxes{display:flex;gap:10px;justify-content:center;margin:24px 0 8px;}
+.pin-box{width:52px;height:60px;border-radius:12px;border:2px solid #E2E8F0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--navy);transition:all .2s;position:relative;}
+.pin-box.filled{border-color:var(--navy);}
+.pin-box.active{border-color:var(--orange);box-shadow:0 0 0 3px rgba(240,94,14,.12);}
+.pin-box.error{border-color:var(--red);background:#FFF5F5;}
+.pin-box.success{border-color:var(--green);background:#F0FDF4;}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:var(--navy);}
+.pin-hidden{position:absolute;opacity:0;width:1px;height:1px;}
+
+/* Custom numpad */
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;}
+.numpad-key{height:60px;border-radius:14px;background:#fff;border:1.5px solid #E8EEF6;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:var(--navy);cursor:pointer;transition:all .1s;user-select:none;}
+.numpad-key:active{background:#F1F5F9;transform:scale(0.95);}
+.numpad-key.del{font-size:16px;color:#64748B;}
+.numpad-key.zero{grid-column:2;}
+.numpad-key.empty{opacity:0;pointer-events:none;}
+
+/* ── Lock screen ── */
+#lockScreen{position:fixed;inset:0;background:var(--navy);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+#lockScreen.hidden{display:none;}
+
+/* ── Admin menu cards ── */
+.admin-section{padding:16px 16px 8px;}
+.admin-section-title{font-size:11px;font-weight:700;color:#94A3B8;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
+.admin-card{background:#fff;border-radius:14px;border:1.5px solid #E8EEF6;overflow:hidden;margin-bottom:8px;}
+.admin-menu-item{display:flex;align-items:center;gap:14px;padding:15px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid #F1F5F9;}
+.admin-menu-item:last-child{border-bottom:none;}
+.admin-menu-item:active{background:#F8FAFC;}
+.admin-menu-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.admin-menu-text{flex:1;}
+.admin-menu-title{font-size:15px;font-weight:600;color:#1E293B;}
+.admin-menu-desc{font-size:12px;color:#94A3B8;margin-top:1px;}
+.admin-menu-arrow{color:#CBD5E1;font-size:16px;}
+
+/* ── Sub-pages (Admin sections) ── */
+.sub-page{display:none;flex:1;flex-direction:column;}
+.sub-page.active{display:flex;}
+.sub-header{background:var(--navy);padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.sub-header-title{font-size:16px;font-weight:700;color:#fff;flex:1;}
+
+/* ── Form elements ── */
+.field-wrap{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.field-label{font-size:13px;font-weight:600;color:#475569;}
+.field-label .req{color:var(--red);margin-left:2px;}
+input,select,textarea{border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;font-size:14px;width:100%;font-family:'Plus Jakarta Sans',sans-serif;background:#fff;color:#1E293B;transition:border-color .15s,box-shadow .15s;outline:none;-webkit-appearance:none;appearance:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(240,94,14,.10);}
+input.err,select.err{border-color:var(--red);}
+select{background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+textarea{resize:none;}
+.err-msg{font-size:12px;color:var(--red);}
+
+/* ── Data list items ── */
+.data-item{background:#fff;border-radius:12px;border:1.5px solid #E8EEF6;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.data-item-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.data-item-text{flex:1;min-width:0;}
+.data-item-title{font-size:14px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.data-item-sub{font-size:12px;color:#94A3B8;margin-top:1px;}
+.data-item-actions{display:flex;gap:6px;flex-shrink:0;}
+.btn-icon{width:34px;height:34px;border-radius:8px;border:1.5px solid #E8EEF6;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all .15s;}
+.btn-icon:active{transform:scale(.95);}
+.btn-icon.edit{border-color:#DBEAFE;background:#EFF6FF;color:#2563EB;}
+.btn-icon.del{border-color:#FEE2E2;background:#FFF5F5;color:#EF4444;}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:3px;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;}
+.badge-aktif{background:#DCFCE7;color:#15803D;}
+.badge-nonaktif{background:#F1F5F9;color:#64748B;}
+.badge-admin{background:#EFF6FF;color:#2563EB;}
+.badge-anggota{background:#F5F3FF;color:#6D28D9;}
+
+/* ── Buttons ── */
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--orange);color:#fff;border-radius:12px;min-height:52px;font-weight:700;font-size:15px;border:none;cursor:pointer;transition:all .15s;width:100%;}
+.btn-primary:active{transform:scale(.98);opacity:.9;}
+.btn-primary:disabled{opacity:.5;pointer-events:none;}
+.btn-secondary{display:flex;align-items:center;justify-content:center;gap:8px;border:2px solid var(--orange);color:var(--orange);background:transparent;border-radius:12px;min-height:48px;font-weight:700;font-size:14px;cursor:pointer;transition:all .15s;width:100%;}
+.btn-secondary:active{background:#FFF4EF;}
+.btn-danger{display:flex;align-items:center;justify-content:center;gap:8px;background:#FFF5F5;color:var(--red);border:1.5px solid #FEE2E2;border-radius:12px;min-height:44px;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;width:100%;}
+.btn-danger:active{background:#FEE2E2;}
+.btn-ghost{background:none;border:none;color:#64748B;font-size:14px;font-weight:600;cursor:pointer;padding:8px;font-family:'Plus Jakarta Sans',sans-serif;}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);z-index:300;display:flex;align-items:flex-end;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:430px;animation:slideUp .25s ease;}
+.modal-handle{width:36px;height:4px;background:#E2E8F0;border-radius:99px;margin:0 auto 20px;}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-confirm{border-radius:20px;padding:24px;max-width:320px;width:calc(100% - 40px);}
+.modal-confirm.center{align-items:center;}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:#1E293B;color:#fff;padding:10px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:500;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.success{background:#15803D;}
+.toast.error{background:#B91C1C;}
+
+/* ── Loading spinner ── */
+.spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);backdrop-filter:blur(2px);z-index:400;display:flex;align-items:center;justify-content:center;}
+.loading-overlay.hidden{display:none;}
+
+/* ── Jadwal Servis ── */
+.jadwal-item{background:#fff;border-radius:12px;border:1.5px solid #E8EEF6;padding:14px 16px;margin-bottom:8px;}
+.jadwal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.jadwal-title{font-size:14px;font-weight:600;color:#1E293B;}
+.jadwal-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.jadwal-meta-item{font-size:11px;color:#64748B;background:#F8FAFC;border-radius:6px;padding:3px 8px;}
+.toggle-switch{position:relative;width:40px;height:22px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;background:#E2E8F0;border-radius:99px;cursor:pointer;transition:background .2s;}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+input:checked + .toggle-track{background:var(--green);}
+input:checked + .toggle-track + .toggle-thumb,
+input:checked ~ .toggle-thumb{transform:translateX(18px);}
+.toggle-switch input:checked + .toggle-track .toggle-thumb{transform:translateX(18px);}
+
+/* ── Onboarding success ── */
+.confetti-wrap{position:relative;overflow:hidden;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100px) rotate(360deg);opacity:0;}}
+.confetti-piece{position:absolute;top:0;width:8px;height:8px;border-radius:2px;animation:confettiFall 1.5s ease-out forwards;}
+
+/* ── Backup section ── */
+.backup-card{background:#fff;border-radius:14px;border:1.5px solid #E8EEF6;padding:20px;}
+.backup-card + .backup-card{margin-top:12px;}
+
+@keyframes popIn{0%{transform:scale(0.5);opacity:0;}70%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     LOCK SCREEN — verifikasi PIN admin
+══════════════════════════════════════════════════════════ -->
+<div id="lockScreen">
+  <div style="text-align:center;margin-bottom:40px;">
+    <div style="width:72px;height:72px;border-radius:20px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;">🔐</div>
+    <div class="display" style="color:#fff;font-size:22px;font-weight:800;">Panel Admin</div>
+    <div style="color:rgba(255,255,255,.5);font-size:13px;margin-top:6px;">Masukkan PIN untuk melanjutkan</div>
+  </div>
+
+  <!-- PIN boxes -->
+  <div class="pin-boxes" id="lockPinBoxes">
+    <div class="pin-box" id="lock-b0"></div>
+    <div class="pin-box" id="lock-b1"></div>
+    <div class="pin-box" id="lock-b2"></div>
+    <div class="pin-box" id="lock-b3"></div>
+    <div class="pin-box" id="lock-b4" style="display:none"></div>
+    <div class="pin-box" id="lock-b5" style="display:none"></div>
+  </div>
+  <div id="lockError" style="text-align:center;color:#F87171;font-size:13px;height:20px;margin:8px 0 16px;"></div>
+
+  <!-- Numpad -->
+  <div class="numpad" style="max-width:300px;width:100%;">
+    <div class="numpad-key" onclick="lockKeyPress('1')">1</div>
+    <div class="numpad-key" onclick="lockKeyPress('2')">2</div>
+    <div class="numpad-key" onclick="lockKeyPress('3')">3</div>
+    <div class="numpad-key" onclick="lockKeyPress('4')">4</div>
+    <div class="numpad-key" onclick="lockKeyPress('5')">5</div>
+    <div class="numpad-key" onclick="lockKeyPress('6')">6</div>
+    <div class="numpad-key" onclick="lockKeyPress('7')">7</div>
+    <div class="numpad-key" onclick="lockKeyPress('8')">8</div>
+    <div class="numpad-key" onclick="lockKeyPress('9')">9</div>
+    <div class="numpad-key empty"></div>
+    <div class="numpad-key zero" onclick="lockKeyPress('0')">0</div>
+    <div class="numpad-key del" onclick="lockKeyDel()">⌫</div>
+  </div>
+  <button class="btn-ghost" style="color:rgba(255,255,255,.4);margin-top:20px;" onclick="goBackFromAdmin()">← Kembali ke Home</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     ONBOARDING — ditampilkan jika belum ada PIN
+══════════════════════════════════════════════════════════ -->
+<div id="onboardingFlow" class="hidden" style="position:fixed;inset:0;background:var(--bg);z-index:150;display:flex;flex-direction:column;max-width:430px;margin:0 auto;">
+
+  <!-- Progress bar -->
+  <div class="onboard-progress">
+    <div class="onboard-dot" id="ob-dot-0"></div>
+    <div class="onboard-dot" id="ob-dot-1"></div>
+    <div class="onboard-dot" id="ob-dot-2"></div>
+  </div>
+
+  <!-- ── Step 1: Nama Admin + PIN ── -->
+  <div class="onboard-screen" id="ob-step-1">
+    <div class="onboard-hero">
+      <div class="onboard-icon"><span style="font-size:32px;">🚗</span></div>
+      <div class="display" style="font-size:26px;font-weight:800;color:var(--navy);line-height:1.2;">Selamat datang<br>di Garasi IdR</div>
+      <div style="font-size:14px;color:#64748B;margin-top:10px;">Setup cepat — selesai dalam 2 menit</div>
+    </div>
+    <div class="onboard-body">
+      <div class="field-wrap">
+        <div class="field-label">Nama Admin <span class="req">*</span></div>
+        <input type="text" id="ob-nama" placeholder="Contoh: Ayah, Mama, Pak Budi..." autocomplete="off">
+        <div class="err-msg hidden" id="ob-nama-err">Nama tidak boleh kosong</div>
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Buat PIN <span class="req">*</span> <span style="font-size:11px;color:#94A3B8;font-weight:400;">(4–6 digit)</span></div>
+        <div class="pin-boxes" id="ob-pin-boxes" style="justify-content:flex-start;margin:0;">
+          <div class="pin-box" id="ob-b0"></div>
+          <div class="pin-box" id="ob-b1"></div>
+          <div class="pin-box" id="ob-b2"></div>
+          <div class="pin-box" id="ob-b3"></div>
+        </div>
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Konfirmasi PIN <span class="req">*</span></div>
+        <div class="pin-boxes" id="ob-pin-confirm-boxes" style="justify-content:flex-start;margin:0;">
+          <div class="pin-box" id="ob-bc0"></div>
+          <div class="pin-box" id="ob-bc1"></div>
+          <div class="pin-box" id="ob-bc2"></div>
+          <div class="pin-box" id="ob-bc3"></div>
+        </div>
+        <div class="err-msg hidden" id="ob-pin-err" style="margin-top:8px;">PIN tidak cocok</div>
+      </div>
+      <!-- Hidden PIN inputs -->
+      <input type="number" id="ob-pin-input" class="pin-hidden" inputmode="numeric" maxlength="4" oninput="obPinInput(this.value, 'pin')">
+      <input type="number" id="ob-pin-confirm-input" class="pin-hidden" inputmode="numeric" maxlength="4" oninput="obPinInput(this.value, 'confirm')">
+    </div>
+    <div class="onboard-footer">
+      <button class="btn-primary" id="ob-step1-btn" onclick="obStep1Next()">
+        <span>Lanjutkan</span>
+        <span>→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Step 2: Kendaraan Pertama ── -->
+  <div class="onboard-screen" id="ob-step-2">
+    <div style="padding:24px 20px 16px;">
+      <button class="btn-ghost" style="padding:0 0 12px;color:#64748B;font-size:13px;" onclick="obGoStep(1)">← Kembali</button>
+      <div class="display" style="font-size:22px;font-weight:800;color:var(--navy);">Tambah kendaraan pertama</div>
+      <div style="font-size:13px;color:#64748B;margin-top:4px;">Bisa tambah lebih banyak nanti via Admin</div>
+    </div>
+    <div class="onboard-body" style="overflow-y:auto;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field-wrap" style="grid-column:span 2;">
+          <div class="field-label">Plat Nomor <span class="req">*</span></div>
+          <input type="text" id="ob-plat" placeholder="Contoh: B 1234 ABC" oninput="this.value=this.value.toUpperCase()" class="mono">
+        </div>
+        <div class="field-wrap">
+          <div class="field-label">Merk <span class="req">*</span></div>
+          <select id="ob-merk" onchange="obMerkChange()">
+            <option value="">Pilih...</option>
+            <option>Honda</option>
+            <option>Yamaha</option>
+            <option>Toyota</option>
+            <option>Suzuki</option>
+            <option>Mitsubishi</option>
+            <option>Daihatsu</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+        <div class="field-wrap">
+          <div class="field-label">Model <span class="req">*</span></div>
+          <input type="text" id="ob-model" placeholder="PCX 160, Jazz...">
+        </div>
+        <div class="field-wrap">
+          <div class="field-label">Tahun <span class="req">*</span></div>
+          <input type="number" id="ob-tahun" placeholder="2022" min="1990" max="2030" inputmode="numeric">
+        </div>
+        <div class="field-wrap">
+          <div class="field-label">Warna</div>
+          <input type="text" id="ob-warna" placeholder="Putih, Hitam...">
+        </div>
+        <div class="field-wrap" style="grid-column:span 2;">
+          <div class="field-label">Pemilik <span class="req">*</span></div>
+          <input type="text" id="ob-pemilik" placeholder="Nama pemilik utama">
+        </div>
+        <div class="field-wrap" style="grid-column:span 2;">
+          <div class="field-label">KM Awal <span class="req">*</span> <span style="font-size:11px;color:#94A3B8;font-weight:400;">(KM saat didaftarkan)</span></div>
+          <input type="number" id="ob-km" placeholder="0" inputmode="numeric">
+        </div>
+      </div>
+      <div class="err-msg hidden" id="ob-step2-err" style="margin-bottom:8px;"></div>
+    </div>
+    <div class="onboard-footer">
+      <button class="btn-primary" onclick="obStep2Next()">
+        <span>Selesai & Masuk Aplikasi</span>
+        <span>🎉</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Step 3: Sukses ── -->
+  <div class="onboard-screen" id="ob-step-3" style="align-items:center;justify-content:center;text-align:center;padding:24px;">
+    <div style="font-size:72px;margin-bottom:20px;animation:popIn .5s ease;">✅</div>
+    <div class="display" style="font-size:28px;font-weight:800;color:var(--navy);margin-bottom:8px;">Siap dipakai!</div>
+    <div style="font-size:14px;color:#64748B;max-width:280px;line-height:1.6;margin-bottom:32px;">
+      Garasi IdR sudah dikonfigurasi. Jadwal Servis default sudah terisi otomatis di background.
+    </div>
+    <div style="background:#fff;border-radius:16px;padding:16px;border:1.5px solid #E8EEF6;width:100%;max-width:320px;text-align:left;margin-bottom:24px;">
+      <div style="font-size:11px;font-weight:700;color:#94A3B8;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;">Ringkasan Setup</div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="ob-summary"></div>
+    </div>
+    <button class="btn-primary" style="max-width:320px;" onclick="obFinish()">Masuk ke Dashboard</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════════════════════════ -->
+<div class="app" id="mainApp">
+  <!-- Header -->
+  <div class="header" id="mainHeader">
+    <div class="header-back hidden" id="headerBack" onclick="goBack()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 14L6 9l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="display" style="color:#fff;font-size:17px;font-weight:800;" id="headerTitle">⚙️ Admin</div>
+    <div style="width:36px;"></div>
+  </div>
+
+  <!-- ── MAIN ADMIN PAGE ── -->
+  <div class="page active" id="page-admin">
+    <!-- Profile card -->
+    <div style="background:linear-gradient(160deg,var(--navy) 0%,var(--navy2) 100%);padding:20px 16px 24px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.04);"></div>
+      <div style="display:flex;align-items:center;gap:14px;position:relative;">
+        <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:22px;border:1.5px solid rgba(255,255,255,.2);">👤</div>
+        <div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);font-weight:600;letter-spacing:.06em;text-transform:uppercase;">Admin</div>
+          <div class="display" style="color:#fff;font-size:20px;font-weight:800;" id="adminNamaDisplay">–</div>
+        </div>
+        <div style="margin-left:auto;">
+          <button style="background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;" onclick="showChangePin()">Ganti PIN</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu: Data Utama -->
+    <div class="admin-section">
+      <div class="admin-section-title">Data Utama</div>
+      <div class="admin-card">
+        <div class="admin-menu-item" onclick="showSubPage('kendaraan')">
+          <div class="admin-menu-icon" style="background:#EFF6FF;">🚗</div>
+          <div class="admin-menu-text">
+            <div class="admin-menu-title">Kendaraan</div>
+            <div class="admin-menu-desc">Tambah, edit, ubah kondisi kendaraan</div>
+          </div>
+          <div class="admin-menu-arrow">›</div>
+        </div>
+        <div class="admin-menu-item" onclick="showSubPage('bengkel')">
+          <div class="admin-menu-icon" style="background:#F0FDF4;">🔧</div>
+          <div class="admin-menu-text">
+            <div class="admin-menu-title">Bengkel</div>
+            <div class="admin-menu-desc">Daftar bengkel langganan</div>
+          </div>
+          <div class="admin-menu-arrow">›</div>
+        </div>
+        <div class="admin-menu-item" onclick="showSubPage('jadwal')">
+          <div class="admin-menu-icon" style="background:#FFF7ED;">📋</div>
+          <div class="admin-menu-text">
+            <div class="admin-menu-title">Jadwal Servis</div>
+            <div class="admin-menu-desc">Interval servis per part & kendaraan</div>
+          </div>
+          <div class="admin-menu-arrow">›</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu: Pengguna & Akses -->
+    <div class="admin-section" style="padding-top:4px;">
+      <div class="admin-section-title">Pengguna & Akses</div>
+      <div class="admin-card">
+        <div class="admin-menu-item" onclick="showSubPage('users')">
+          <div class="admin-menu-icon" style="background:#F5F3FF;">👨‍👩‍👧‍👦</div>
+          <div class="admin-menu-text">
+            <div class="admin-menu-title">Anggota</div>
+            <div class="admin-menu-desc">Kelola siapa yang bisa input servis</div>
+          </div>
+          <div class="admin-menu-arrow">›</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu: Data & Backup -->
+    <div class="admin-section" style="padding-top:4px;">
+      <div class="admin-section-title">Data & Backup</div>
+      <div class="admin-card">
+        <div class="admin-menu-item" onclick="showSubPage('backup')">
+          <div class="admin-menu-icon" style="background:#FFF0F6;">💾</div>
+          <div class="admin-menu-text">
+            <div class="admin-menu-title">Export Backup</div>
+            <div class="admin-menu-desc">Download semua data ke Excel</div>
+          </div>
+          <div class="admin-menu-arrow">›</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- App info -->
+    <div style="padding:16px 20px 8px;text-align:center;">
+      <div style="font-size:11px;color:#CBD5E1;font-weight:500;">Garasi IdR · Blueprint v3.2 MVP</div>
+      <div style="font-size:10px;color:#CBD5E1;margin-top:2px;" id="appVersion">small but genuinely useful software ✨</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SUB PAGE: KENDARAAN
+  ══════════════════════════════════ -->
+  <div class="sub-page" id="sub-kendaraan">
+    <div class="sub-header">
+      <button class="header-back" onclick="hideSubPage()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 14L6 9l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="sub-header-title">🚗 Kendaraan</div>
+      <button style="background:var(--orange);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;" onclick="showKendaraanForm()">+ Tambah</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 80px;" id="kendaraanList">
+      <div class="data-item" style="opacity:.4;pointer-events:none;" id="kendaraanSkeleton">
+        <div class="data-item-icon" style="background:#F1F5F9;"></div>
+        <div class="data-item-text">
+          <div style="height:14px;background:#F1F5F9;border-radius:6px;width:60%;margin-bottom:6px;"></div>
+          <div style="height:11px;background:#F1F5F9;border-radius:6px;width:40%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SUB PAGE: BENGKEL
+  ══════════════════════════════════ -->
+  <div class="sub-page" id="sub-bengkel">
+    <div class="sub-header">
+      <button class="header-back" onclick="hideSubPage()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 14L6 9l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="sub-header-title">🔧 Bengkel</div>
+      <button style="background:var(--orange);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;" onclick="showBengkelForm()">+ Tambah</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 80px;" id="bengkelList">
+      <div style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;" id="bengkelEmpty">Memuat data bengkel...</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SUB PAGE: JADWAL SERVIS
+  ══════════════════════════════════ -->
+  <div class="sub-page" id="sub-jadwal">
+    <div class="sub-header">
+      <button class="header-back" onclick="hideSubPage()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 14L6 9l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="sub-header-title">📋 Jadwal Servis</div>
+      <button style="background:var(--orange);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;" onclick="showJadwalForm()">+ Tambah</button>
+    </div>
+    <!-- Filter kendaraan -->
+    <div style="padding:12px 16px;background:#fff;border-bottom:1px solid #E8EEF6;">
+      <select id="jadwalFilter" onchange="loadJadwal()" style="background:#F8FAFC;border-color:#E8EEF6;font-size:13px;padding:9px 12px;">
+        <option value="">Semua Kendaraan</option>
+      </select>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:12px 16px 80px;" id="jadwalList">
+      <div style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;">Memuat jadwal servis...</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SUB PAGE: USERS
+  ══════════════════════════════════ -->
+  <div class="sub-page" id="sub-users">
+    <div class="sub-header">
+      <button class="header-back" onclick="hideSubPage()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 14L6 9l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="sub-header-title">👨‍👩‍👧‍👦 Anggota</div>
+      <button style="background:var(--orange);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;" onclick="showUserForm()">+ Tambah</button>
+    </div>
+    <div style="padding:12px 16px;">
+      <div style="background:#EFF6FF;border-radius:10px;padding:12px 14px;font-size:13px;color:#1D4ED8;display:flex;align-items:center;gap:8px;">
+        <span>ℹ️</span>
+        <span>Maksimal 5 anggota. Pilih nama saat input servis, tidak perlu login.</span>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:0 16px 80px;" id="usersList">
+      <div style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;">Memuat daftar anggota...</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SUB PAGE: BACKUP
+  ══════════════════════════════════ -->
+  <div class="sub-page" id="sub-backup">
+    <div class="sub-header">
+      <button class="header-back" onclick="hideSubPage()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 14L6 9l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="sub-header-title">💾 Export Backup</div>
+      <div style="width:36px;"></div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 80px;">
+      <div class="backup-card">
+        <div style="font-size:15px;font-weight:700;color:#1E293B;margin-bottom:6px;">📦 Export Semua Data</div>
+        <div style="font-size:13px;color:#64748B;line-height:1.5;margin-bottom:16px;">
+          Download semua data dari 6 sheet Google Sheets ke dalam 1 file Excel. Simpan sebagai backup manual kapan saja.
+        </div>
+        <div style="background:#F8FAFC;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+          <div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Yang akan di-export</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="font-size:13px;color:#475569;display:flex;align-items:center;gap:8px;"><span>✅</span> Kendaraan</div>
+            <div style="font-size:13px;color:#475569;display:flex;align-items:center;gap:8px;"><span>✅</span> Histori Servis</div>
+            <div style="font-size:13px;color:#475569;display:flex;align-items:center;gap:8px;"><span>✅</span> Item Servis</div>
+            <div style="font-size:13px;color:#475569;display:flex;align-items:center;gap:8px;"><span>✅</span> Jadwal Servis</div>
+            <div style="font-size:13px;color:#475569;display:flex;align-items:center;gap:8px;"><span>✅</span> Bengkel</div>
+            <div style="font-size:13px;color:#475569;display:flex;align-items:center;gap:8px;"><span>✅</span> Anggota</div>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="exportBackup()">
+          <span>💾</span>
+          <span>Download Excel Backup</span>
+        </button>
+      </div>
+
+      <div class="backup-card" style="margin-top:12px;">
+        <div style="font-size:15px;font-weight:700;color:#1E293B;margin-bottom:6px;">⚠️ Catatan Penting</div>
+        <div style="font-size:13px;color:#64748B;line-height:1.6;">
+          Backup otomatis tersedia di Fase 2. Untuk sekarang, lakukan export manual secara berkala — disarankan setiap bulan atau sebelum membuat perubahan besar.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <div class="nav-item" data-tab="home" onclick="navTo('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" data-tab="servis" onclick="navTo('servis')">
+      <div class="nav-icon">🔧</div>
+      <div class="nav-label">Servis</div>
+    </div>
+    <div class="nav-item" data-tab="cari" onclick="navTo('cari')">
+      <div class="nav-icon">🔍</div>
+      <div class="nav-label">Cari</div>
+    </div>
+    <div class="nav-item" data-tab="laporan" onclick="navTo('laporan')">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">Laporan</div>
+    </div>
+    <div class="nav-item active" data-tab="admin">
+      <div class="nav-icon">⚙️</div>
+      <div class="nav-label">Admin</div>
+    </div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════════════════ -->
+
+<!-- Kendaraan Form Modal -->
+<div class="modal-overlay hidden" id="kendaraanModal">
+  <div class="modal-sheet" style="max-width:430px;max-height:85vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-size:17px;font-weight:700;color:#1E293B;" id="kendaraanModalTitle">Tambah Kendaraan</div>
+      <button class="btn-ghost" onclick="closeModal('kendaraanModal')" style="padding:4px 8px;font-size:18px;">✕</button>
+    </div>
+    <input type="hidden" id="km-plat-edit">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="field-wrap" style="grid-column:span 2;">
+        <div class="field-label">Plat Nomor <span class="req">*</span></div>
+        <input type="text" id="km-plat" placeholder="B 1234 ABC" oninput="this.value=this.value.toUpperCase()" class="mono">
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Merk <span class="req">*</span></div>
+        <select id="km-merk">
+          <option value="">Pilih...</option>
+          <option>Honda</option><option>Yamaha</option><option>Toyota</option>
+          <option>Suzuki</option><option>Mitsubishi</option><option>Daihatsu</option><option>Lainnya</option>
+        </select>
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Model <span class="req">*</span></div>
+        <input type="text" id="km-model" placeholder="PCX 160, Jazz...">
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Tahun <span class="req">*</span></div>
+        <input type="number" id="km-tahun" placeholder="2022" min="1990" max="2030" inputmode="numeric">
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Warna</div>
+        <input type="text" id="km-warna" placeholder="Putih, Hitam...">
+      </div>
+      <div class="field-wrap" style="grid-column:span 2;">
+        <div class="field-label">Pemilik <span class="req">*</span></div>
+        <input type="text" id="km-pemilik" placeholder="Nama pemilik utama">
+      </div>
+      <div class="field-wrap" style="grid-column:span 2;" id="km-km-wrap">
+        <div class="field-label">KM Awal <span class="req">*</span></div>
+        <input type="number" id="km-km" placeholder="0" inputmode="numeric">
+      </div>
+      <div class="field-wrap" style="grid-column:span 2;" id="km-status-wrap">
+        <div class="field-label">Kondisi</div>
+        <select id="km-status">
+          <option value="Aktif">Aktif</option>
+          <option value="Tidak Digunakan">Tidak Digunakan</option>
+          <option value="Dijual">Dijual</option>
+        </select>
+      </div>
+    </div>
+    <div class="err-msg hidden" id="km-err" style="margin-bottom:8px;"></div>
+    <button class="btn-primary" style="margin-top:4px;" onclick="saveKendaraan()">Simpan</button>
+    <div id="km-hapus-wrap" style="display:none;margin-top:10px;">
+      <button class="btn-danger" onclick="confirmHapusKendaraan()">🗑 Hapus Kendaraan Ini</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bengkel Form Modal -->
+<div class="modal-overlay hidden" id="bengkelModal">
+  <div class="modal-sheet" style="max-width:430px;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-size:17px;font-weight:700;color:#1E293B;" id="bengkelModalTitle">Tambah Bengkel</div>
+      <button class="btn-ghost" onclick="closeModal('bengkelModal')" style="padding:4px 8px;font-size:18px;">✕</button>
+    </div>
+    <input type="hidden" id="bg-id-edit">
+    <div class="field-wrap">
+      <div class="field-label">Nama Bengkel <span class="req">*</span></div>
+      <input type="text" id="bg-nama" placeholder="Bengkel Maju Jaya">
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">Area / Kota <span class="req">*</span></div>
+      <input type="text" id="bg-area" placeholder="Surabaya, Sidoarjo...">
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">Alamat</div>
+      <input type="text" id="bg-alamat" placeholder="Jl. Contoh No.123">
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">Telepon</div>
+      <input type="tel" id="bg-telp" placeholder="08xx-xxxx-xxxx" inputmode="tel">
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">Spesialisasi</div>
+      <select id="bg-spesialis">
+        <option value="Umum">Umum</option>
+        <option value="Motor">Motor</option>
+        <option value="Mobil">Mobil</option>
+      </select>
+    </div>
+    <div class="err-msg hidden" id="bg-err" style="margin-bottom:8px;"></div>
+    <button class="btn-primary" onclick="saveBengkel()">Simpan</button>
+    <div id="bg-hapus-wrap" style="display:none;margin-top:10px;">
+      <button class="btn-danger" onclick="confirmHapusBengkel()">🗑 Hapus Bengkel Ini</button>
+    </div>
+  </div>
+</div>
+
+<!-- Jadwal Form Modal -->
+<div class="modal-overlay hidden" id="jadwalModal">
+  <div class="modal-sheet" style="max-width:430px;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-size:17px;font-weight:700;color:#1E293B;" id="jadwalModalTitle">Tambah Jadwal Servis</div>
+      <button class="btn-ghost" onclick="closeModal('jadwalModal')" style="padding:4px 8px;font-size:18px;">✕</button>
+    </div>
+    <input type="hidden" id="jd-id-edit">
+    <div class="field-wrap">
+      <div class="field-label">Nama Part / Servis <span class="req">*</span></div>
+      <input type="text" id="jd-nama" placeholder="Oli mesin, Busi, Filter udara...">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="field-wrap">
+        <div class="field-label">Merk Kendaraan <span class="req">*</span></div>
+        <select id="jd-merk">
+          <option value="">Pilih...</option>
+          <option>Honda</option><option>Yamaha</option><option>Toyota</option>
+          <option>Suzuki</option><option>Mitsubishi</option><option>Daihatsu</option><option>Lainnya</option>
+        </select>
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Model Kendaraan <span class="req">*</span></div>
+        <input type="text" id="jd-model" placeholder="PCX 160, Jazz...">
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Interval KM</div>
+        <input type="number" id="jd-km" placeholder="2000" inputmode="numeric">
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Interval Hari</div>
+        <input type="number" id="jd-hari" placeholder="60" inputmode="numeric">
+      </div>
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">Kategori <span class="req">*</span></div>
+      <select id="jd-kategori">
+        <option value="Rutin">Rutin</option>
+        <option value="Berkala">Berkala</option>
+        <option value="Kondisional">Kondisional</option>
+      </select>
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">Keterangan</div>
+      <input type="text" id="jd-ket" placeholder="Catatan tambahan (opsional)">
+    </div>
+    <div class="err-msg hidden" id="jd-err" style="margin-bottom:8px;"></div>
+    <button class="btn-primary" onclick="saveJadwal()">Simpan</button>
+  </div>
+</div>
+
+<!-- User Form Modal -->
+<div class="modal-overlay hidden" id="userModal">
+  <div class="modal-sheet" style="max-width:430px;">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-size:17px;font-weight:700;color:#1E293B;" id="userModalTitle">Tambah Anggota</div>
+      <button class="btn-ghost" onclick="closeModal('userModal')" style="padding:4px 8px;font-size:18px;">✕</button>
+    </div>
+    <input type="hidden" id="us-id-edit">
+    <div class="field-wrap">
+      <div class="field-label">Nama <span class="req">*</span></div>
+      <input type="text" id="us-nama" placeholder="Nama yang tampil saat input servis">
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">Role</div>
+      <select id="us-role">
+        <option value="Anggota">Anggota</option>
+        <option value="Admin">Admin</option>
+      </select>
+    </div>
+    <div class="field-wrap" id="us-status-wrap" style="display:none;">
+      <div class="field-label">Status</div>
+      <select id="us-status">
+        <option value="Aktif">Aktif</option>
+        <option value="Tidak Aktif">Tidak Aktif</option>
+      </select>
+    </div>
+    <div class="err-msg hidden" id="us-err" style="margin-bottom:8px;"></div>
+    <button class="btn-primary" onclick="saveUser()">Simpan</button>
+  </div>
+</div>
+
+<!-- Ganti PIN Modal -->
+<div class="modal-overlay hidden" id="changePinModal">
+  <div class="modal-sheet" style="max-width:430px;">
+    <div class="modal-handle"></div>
+    <div style="font-size:17px;font-weight:700;color:#1E293B;margin-bottom:6px;">Ganti PIN Admin</div>
+    <div style="font-size:13px;color:#64748B;margin-bottom:20px;">PIN baru 4–6 digit</div>
+    <div class="field-wrap">
+      <div class="field-label">PIN Baru <span class="req">*</span></div>
+      <input type="password" id="cp-new" inputmode="numeric" placeholder="••••" maxlength="6">
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">Konfirmasi PIN <span class="req">*</span></div>
+      <input type="password" id="cp-confirm" inputmode="numeric" placeholder="••••" maxlength="6">
+    </div>
+    <div class="err-msg hidden" id="cp-err" style="margin-bottom:8px;"></div>
+    <button class="btn-primary" onclick="savePin()">Ganti PIN</button>
+    <button class="btn-ghost" onclick="closeModal('changePinModal')" style="margin-top:8px;width:100%;text-align:center;">Batal</button>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay hidden" id="confirmModal" style="align-items:center;justify-content:center;">
+  <div class="modal-sheet modal-confirm" style="border-radius:20px;max-width:320px;width:calc(100% - 40px);background:#fff;">
+    <div style="text-align:center;margin-bottom:16px;font-size:36px;" id="confirmIcon">⚠️</div>
+    <div style="font-size:16px;font-weight:700;color:#1E293B;text-align:center;margin-bottom:8px;" id="confirmTitle">Hapus data ini?</div>
+    <div style="font-size:13px;color:#64748B;text-align:center;margin-bottom:20px;" id="confirmDesc">Data tidak bisa dikembalikan. Yakin?</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-secondary" style="flex:1;" onclick="closeModal('confirmModal')">Batal</button>
+      <button style="flex:1;background:var(--red);color:#fff;border:none;border-radius:12px;min-height:48px;font-weight:700;font-size:14px;cursor:pointer;" id="confirmOkBtn">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+    <div style="width:44px;height:44px;border:3px solid #E8EEF6;border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;"></div>
+    <div style="font-size:13px;color:#64748B;font-weight:600;" id="loadingText">Menyimpan...</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyc-9p2v_OwoMvbDoIIPXO5rOIeJv_WaY2iJeGiB_aHgatogwohiTBVhzDzHDNOay1glg/exec'; // ← ganti setelah deploy
+const PIN_KEY    = 'garasi_admin_pin';
+const NAMA_KEY   = 'garasi_admin_nama';
+const SETUP_KEY  = 'garasi_setup_done';
+
+// ── STATE ──────────────────────────────────────────────────────────
+let lockBuffer     = '';
+let lockPinLength  = 4; // will be detected
+let currentSubPage = null;
+let dataCache      = { kendaraan:[], bengkel:[], jadwal:[], users:[] };
+let editTarget     = null; // for delete confirmation
+let confirmCb      = null; // callback for confirm modal
+
+// ── INIT ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const setupDone = localStorage.getItem(SETUP_KEY);
+  const savedPin  = localStorage.getItem(PIN_KEY);
+
+  if (!setupDone || !savedPin) {
+    // First time — show onboarding
+    showOnboarding();
+  } else {
+    // Show lock screen for PIN verification
+    lockPinLength = savedPin.length;
+    showLockScreen();
+  }
+});
+
+// ── ONBOARDING ────────────────────────────────────────────────────
+let obPinVal     = '';
+let obConfirmVal = '';
+let obStep       = 1;
+
+function showOnboarding() {
+  document.getElementById('lockScreen').classList.add('hidden');
+  document.getElementById('onboardingFlow').classList.remove('hidden');
+  obGoStep(1);
+}
+
+function obGoStep(n) {
+  obStep = n;
+  document.querySelectorAll('.onboard-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`ob-step-${n}`).classList.add('active');
+  // Update progress dots
+  for (let i = 0; i < 3; i++) {
+    const dot = document.getElementById(`ob-dot-${i}`);
+    dot.classList.remove('done','active');
+    if (i < n-1) dot.classList.add('done');
+    else if (i === n-1) dot.classList.add('active');
+  }
+}
+
+function obPinInput(val, type) {
+  // handled via numpad clicks instead
+}
+
+// PIN entry for onboarding — tap on boxes to focus
+document.addEventListener('DOMContentLoaded', () => {
+  // Make pin boxes tappable
+  ['ob-b0','ob-b1','ob-b2','ob-b3'].forEach((id,i) => {
+    document.getElementById(id)?.addEventListener('click', () => {
+      document.getElementById('ob-pin-input')?.focus();
+    });
+  });
+  ['ob-bc0','ob-bc1','ob-bc2','ob-bc3'].forEach((id,i) => {
+    document.getElementById(id)?.addEventListener('click', () => {
+      document.getElementById('ob-pin-confirm-input')?.focus();
+    });
+  });
+});
+
+function renderPinBoxes(val, prefix) {
+  for (let i = 0; i < 4; i++) {
+    const box = document.getElementById(`${prefix}${i}`);
+    if (!box) continue;
+    box.classList.remove('active','filled','error');
+    if (i < val.length) {
+      box.classList.add('filled');
+      box.innerHTML = '<div class="pin-dot"></div>';
+    } else if (i === val.length) {
+      box.classList.add('active');
+      box.innerHTML = '';
+    } else {
+      box.innerHTML = '';
+    }
+  }
+}
+
+// Intercept native input for PIN fields
+document.addEventListener('input', e => {
+  if (e.target.id === 'ob-pin-input') {
+    obPinVal = e.target.value.replace(/\D/g,'').slice(0,6);
+    e.target.value = obPinVal;
+    renderPinBoxes(obPinVal, 'ob-b');
+  }
+  if (e.target.id === 'ob-pin-confirm-input') {
+    obConfirmVal = e.target.value.replace(/\D/g,'').slice(0,6);
+    e.target.value = obConfirmVal;
+    renderPinBoxes(obConfirmVal, 'ob-bc');
+  }
+});
+
+function obStep1Next() {
+  const nama = document.getElementById('ob-nama').value.trim();
+  const pin  = obPinVal;
+  const conf = obConfirmVal;
+
+  // Validate nama
+  if (!nama) {
+    document.getElementById('ob-nama').classList.add('err');
+    document.getElementById('ob-nama-err').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('ob-nama').classList.remove('err');
+  document.getElementById('ob-nama-err').classList.add('hidden');
+
+  // Validate PIN
+  if (pin.length < 4) {
+    showErrPin('PIN minimal 4 digit');
+    return;
+  }
+  if (pin !== conf) {
+    document.getElementById('ob-pin-err').classList.remove('hidden');
+    renderPinBoxes(conf.split('').map(()=>'X'), 'ob-bc'); // shake
+    setTimeout(() => renderPinBoxes(obConfirmVal, 'ob-bc'), 800);
+    return;
+  }
+  document.getElementById('ob-pin-err').classList.add('hidden');
+
+  // Save temp
+  localStorage.setItem('ob_temp_nama', nama);
+  localStorage.setItem('ob_temp_pin', pin);
+  obGoStep(2);
+}
+
+function showErrPin(msg) {
+  // Flash error on pin boxes
+  for (let i = 0; i < 4; i++) {
+    const box = document.getElementById(`ob-b${i}`);
+    if (box) box.classList.add('error');
+  }
+  showToast(msg, 'error');
+  setTimeout(() => {
+    for (let i = 0; i < 4; i++) {
+      const box = document.getElementById(`ob-b${i}`);
+      if (box) { box.classList.remove('error'); box.classList.remove('filled'); box.innerHTML = ''; }
+    }
+    obPinVal = '';
+    document.getElementById('ob-pin-input').value = '';
+  }, 800);
+}
+
+async function obStep2Next() {
+  const plat    = document.getElementById('ob-plat').value.trim();
+  const merk    = document.getElementById('ob-merk').value;
+  const model   = document.getElementById('ob-model').value.trim();
+  const tahun   = document.getElementById('ob-tahun').value;
+  const warna   = document.getElementById('ob-warna').value.trim();
+  const pemilik = document.getElementById('ob-pemilik').value.trim();
+  const km      = document.getElementById('ob-km').value;
+  const err     = document.getElementById('ob-step2-err');
+
+  if (!plat || !merk || !model || !tahun || !pemilik || km === '') {
+    err.textContent = '⚠ Semua field wajib diisi';
+    err.classList.remove('hidden');
+    return;
+  }
+  err.classList.add('hidden');
+
+  const nama = localStorage.getItem('ob_temp_nama');
+  const pin  = localStorage.getItem('ob_temp_pin');
+
+  showLoading('Menyiapkan Garasi IdR...');
+
+  try {
+    // Step 1: create admin + PIN
+    const r1 = await apiPost({ action:'onboarding', langkah:1, nama_admin:nama, pin, pin_confirm:pin });
+    if (!r1.success) throw new Error(r1.error);
+
+    // Step 2: add kendaraan
+    const r2 = await apiPost({
+      action:'onboarding', langkah:2,
+      plat_nomor:plat, merk, model, tahun:parseInt(tahun), warna, pemilik, km_awal:parseInt(km)||0
+    });
+    if (!r2.success) throw new Error(r2.error);
+
+    // Step 3: confirm
+    const r3 = await apiPost({ action:'onboarding', langkah:3 });
+
+    // Save locally
+    localStorage.setItem(PIN_KEY, pin);
+    localStorage.setItem(NAMA_KEY, nama);
+    localStorage.setItem(SETUP_KEY, '1');
+
+    hideLoading();
+
+    // Show summary
+    const sum = document.getElementById('ob-summary');
+    sum.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:13px;color:#64748B;">Admin</span>
+        <span style="font-size:13px;font-weight:600;color:#1E293B;">${nama}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:13px;color:#64748B;">Kendaraan</span>
+        <span style="font-size:13px;font-weight:600;color:#1E293B;">${merk} ${model}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:13px;color:#64748B;">Plat</span>
+        <span style="font-size:13px;font-weight:600;color:#1E293B;font-family:'JetBrains Mono',monospace;">${plat}</span>
+      </div>
+    `;
+    obGoStep(3);
+
+  } catch (e) {
+    hideLoading();
+    document.getElementById('ob-step2-err').textContent = '⚠ ' + (e.message || 'Gagal menghubungi server');
+    document.getElementById('ob-step2-err').classList.remove('hidden');
+  }
+}
+
+function obFinish() {
+  localStorage.setItem(SETUP_KEY, '1');
+  window.location.href = 'dashboard';
+}
+
+// ── LOCK SCREEN ────────────────────────────────────────────────────
+function showLockScreen() {
+  document.getElementById('lockScreen').classList.remove('hidden');
+  document.getElementById('mainApp').style.display = 'none';
+  lockBuffer = '';
+  renderLockBoxes();
+}
+
+function lockKeyPress(digit) {
+  const savedPin = localStorage.getItem(PIN_KEY) || '';
+  lockPinLength = savedPin.length || 4;
+  if (lockBuffer.length >= lockPinLength) return;
+  lockBuffer += digit;
+  renderLockBoxes();
+  if (lockBuffer.length === lockPinLength) {
+    setTimeout(verifyPin, 100);
+  }
+}
+
+function lockKeyDel() {
+  lockBuffer = lockBuffer.slice(0,-1);
+  renderLockBoxes();
+  document.getElementById('lockError').textContent = '';
+}
+
+function renderLockBoxes() {
+  const savedPin = localStorage.getItem(PIN_KEY) || '';
+  lockPinLength = savedPin.length || 4;
+  const boxes = document.getElementById('lockPinBoxes');
+  // Show correct number of boxes
+  for (let i = 0; i < 6; i++) {
+    const box = document.getElementById(`lock-b${i}`);
+    if (!box) continue;
+    box.style.display = i < lockPinLength ? '' : 'none';
+    box.classList.remove('active','filled','error','success');
+    if (i < lockBuffer.length) {
+      box.classList.add('filled');
+      box.innerHTML = '<div class="pin-dot" style="background:#fff;"></div>';
+    } else if (i === lockBuffer.length) {
+      box.classList.add('active');
+      box.innerHTML = '';
+    } else {
+      box.innerHTML = '';
+    }
+    // Override colors for dark background
+    box.style.background = 'rgba(255,255,255,.05)';
+    box.style.borderColor = i < lockBuffer.length ? '#fff' : 'rgba(255,255,255,.2)';
+    if (i === lockBuffer.length) box.style.borderColor = 'var(--orange)';
+  }
+}
+
+async function verifyPin() {
+  const savedPin = localStorage.getItem(PIN_KEY);
+  if (!savedPin) { showOnboarding(); return; }
+
+  if (lockBuffer === savedPin) {
+    // Success
+    for (let i = 0; i < lockPinLength; i++) {
+      const b = document.getElementById(`lock-b${i}`);
+      if (b) { b.style.borderColor='var(--green)'; b.style.background='rgba(34,197,94,.15)'; }
+    }
+    setTimeout(() => {
+      document.getElementById('lockScreen').classList.add('hidden');
+      document.getElementById('mainApp').style.display = '';
+      document.getElementById('adminNamaDisplay').textContent = localStorage.getItem(NAMA_KEY) || 'Admin';
+      loadAdminData();
+    }, 300);
+  } else {
+    // Error
+    document.getElementById('lockError').textContent = 'PIN salah. Coba lagi.';
+    for (let i = 0; i < lockPinLength; i++) {
+      const b = document.getElementById(`lock-b${i}`);
+      if (b) { b.style.borderColor='var(--red)'; b.style.background='rgba(239,68,68,.15)'; }
+    }
+    setTimeout(() => {
+      lockBuffer = '';
+      renderLockBoxes();
+      document.getElementById('lockError').textContent = '';
+    }, 800);
+  }
+}
+
+function goBackFromAdmin() {
+  // Navigate to dashboard (in a real app this would be window.location.href = 'garasi-idr-dashboard.html')
+  showToast('Kembali ke Dashboard');
+}
+
+// ── ADMIN DATA LOADING ─────────────────────────────────────────────
+async function loadAdminData() {
+  try {
+    const [rvKend, rvBengkel, rvJadwal, rvUsers] = await Promise.all([
+      apiGet('getKendaraan'),
+      apiGet('getBengkel'),
+      apiGet('getJadwalServis'),
+      apiGet('getUsers')
+    ]);
+    if (rvKend.success)    dataCache.kendaraan = rvKend.data || [];
+    if (rvBengkel.success) dataCache.bengkel   = rvBengkel.data || [];
+    if (rvJadwal.success)  dataCache.jadwal    = rvJadwal.data || [];
+    if (rvUsers.success)   dataCache.users     = rvUsers.data || [];
+
+    // Populate jadwal filter
+    const filter = document.getElementById('jadwalFilter');
+    const kends = [...new Set(dataCache.kendaraan.map(k => `${k.merk} ${k.model}`))];
+    kends.forEach(k => {
+      const o = document.createElement('option');
+      o.value = k; o.textContent = k;
+      filter.appendChild(o);
+    });
+  } catch (e) {
+    // silently fail — will show error when user opens sub-pages
+  }
+}
+
+// ── SUB PAGE NAVIGATION ────────────────────────────────────────────
+function showSubPage(name) {
+  currentSubPage = name;
+  document.getElementById('page-admin').style.display = 'none';
+  document.getElementById(`sub-${name}`).classList.add('active');
+  document.getElementById('headerBack').classList.remove('hidden');
+  document.getElementById('headerTitle').textContent = {
+    kendaraan:'🚗 Kendaraan', bengkel:'🔧 Bengkel',
+    jadwal:'📋 Jadwal Servis', users:'👨‍👩‍👧‍👦 Anggota', backup:'💾 Backup'
+  }[name];
+  // Load data
+  if (name === 'kendaraan') renderKendaraan();
+  if (name === 'bengkel')   renderBengkel();
+  if (name === 'jadwal')    loadJadwal();
+  if (name === 'users')     renderUsers();
+}
+
+function hideSubPage() {
+  if (currentSubPage) {
+    document.getElementById(`sub-${currentSubPage}`).classList.remove('active');
+    currentSubPage = null;
+  }
+  document.getElementById('page-admin').style.display = '';
+  document.getElementById('headerBack').classList.add('hidden');
+  document.getElementById('headerTitle').textContent = '⚙️ Admin';
+}
+
+function goBack() { hideSubPage(); }
+
+// ── KENDARAAN ─────────────────────────────────────────────────────
+function renderKendaraan() {
+  const list = document.getElementById('kendaraanList');
+  const data = dataCache.kendaraan;
+  if (!data.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;">Belum ada kendaraan</div>';
+    return;
+  }
+  list.innerHTML = data.map(k => `
+    <div class="data-item">
+      <div class="data-item-icon" style="background:${k.status==='Aktif'?'#EFF6FF':'#F1F5F9'};">${k.merk==='Honda'?'🏍️':k.merk==='Toyota'||k.merk==='Daihatsu'||k.merk==='Mitsubishi'?'🚗':'🛵'}</div>
+      <div class="data-item-text">
+        <div class="data-item-title">${k.merk} ${k.model} <span class="mono" style="font-size:11px;color:#94A3B8;">${k.plat_nomor}</span></div>
+        <div class="data-item-sub">${k.pemilik} · ${k.tahun} · ${(k.km_terakhir||k.km_awal||0).toLocaleString('id')} km</div>
+      </div>
+      <div class="data-item-actions">
+        <div class="btn-icon edit" onclick="showKendaraanForm(${JSON.stringify(k).replace(/"/g,"&quot;")})">✏️</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showKendaraanForm(kend = null) {
+  const isEdit = !!kend;
+  document.getElementById('kendaraanModalTitle').textContent = isEdit ? 'Edit Kendaraan' : 'Tambah Kendaraan';
+  document.getElementById('km-plat-edit').value = isEdit ? kend.plat_nomor : '';
+  document.getElementById('km-plat').value = isEdit ? kend.plat_nomor : '';
+  document.getElementById('km-plat').readOnly = isEdit;
+  document.getElementById('km-plat').style.background = isEdit ? '#F8FAFC' : '';
+  document.getElementById('km-merk').value = isEdit ? kend.merk : '';
+  document.getElementById('km-model').value = isEdit ? kend.model : '';
+  document.getElementById('km-tahun').value = isEdit ? kend.tahun : '';
+  document.getElementById('km-warna').value = isEdit ? kend.warna : '';
+  document.getElementById('km-pemilik').value = isEdit ? kend.pemilik : '';
+  document.getElementById('km-km').value = isEdit ? kend.km_awal : '';
+  document.getElementById('km-status').value = isEdit ? kend.status : 'Aktif';
+  document.getElementById('km-km-wrap').querySelector('.field-label').textContent = isEdit ? 'KM Awal' : 'KM Awal *';
+  document.getElementById('km-hapus-wrap').style.display = isEdit ? 'block' : 'none';
+  document.getElementById('km-err').classList.add('hidden');
+  openModal('kendaraanModal');
+}
+
+async function saveKendaraan() {
+  const platEdit = document.getElementById('km-plat-edit').value;
+  const isEdit = !!platEdit;
+  const plat    = document.getElementById('km-plat').value.trim();
+  const merk    = document.getElementById('km-merk').value;
+  const model   = document.getElementById('km-model').value.trim();
+  const tahun   = document.getElementById('km-tahun').value;
+  const warna   = document.getElementById('km-warna').value.trim();
+  const pemilik = document.getElementById('km-pemilik').value.trim();
+  const km      = document.getElementById('km-km').value;
+  const status  = document.getElementById('km-status').value;
+  const err     = document.getElementById('km-err');
+
+  if (!plat || !merk || !model || !tahun || !pemilik) {
+    err.textContent = '⚠ Field bertanda * wajib diisi'; err.classList.remove('hidden'); return;
+  }
+  err.classList.add('hidden');
+  showLoading('Menyimpan kendaraan...');
+  try {
+    const payload = isEdit
+      ? { action:'updateKendaraan', plat_nomor:platEdit, merk, model, tahun:parseInt(tahun), warna, pemilik, status }
+      : { action:'addKendaraan', plat_nomor:plat, merk, model, tahun:parseInt(tahun), warna, pemilik, km_awal:parseInt(km)||0 };
+    const rv = await apiPost(payload);
+    hideLoading();
+    if (!rv.success) { err.textContent = '⚠ ' + rv.error; err.classList.remove('hidden'); return; }
+    closeModal('kendaraanModal');
+    showToast(isEdit ? 'Kendaraan diperbarui ✓' : 'Kendaraan ditambahkan ✓', 'success');
+    // Refresh
+    const rvKend = await apiGet('getKendaraan');
+    if (rvKend.success) { dataCache.kendaraan = rvKend.data || []; renderKendaraan(); }
+  } catch(e) {
+    hideLoading();
+    err.textContent = '⚠ Gagal terhubung ke server'; err.classList.remove('hidden');
+  }
+}
+
+function confirmHapusKendaraan() {
+  const plat = document.getElementById('km-plat-edit').value;
+  closeModal('kendaraanModal');
+  showConfirm('🚗', 'Hapus Kendaraan?', 'Histori servis tetap tersimpan. Kendaraan tidak akan muncul di Pengingat.', async () => {
+    showLoading('Menghapus...');
+    const rv = await apiPost({ action:'deleteKendaraan', plat_nomor:plat });
+    hideLoading();
+    if (rv.success) {
+      showToast('Kendaraan dihapus', 'success');
+      const rvKend = await apiGet('getKendaraan');
+      if (rvKend.success) { dataCache.kendaraan = rvKend.data || []; renderKendaraan(); }
+    } else showToast(rv.error || 'Gagal hapus', 'error');
+  });
+}
+
+// ── BENGKEL ───────────────────────────────────────────────────────
+function renderBengkel() {
+  const list = document.getElementById('bengkelList');
+  const data = dataCache.bengkel;
+  if (!data.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;">Belum ada bengkel</div>';
+    return;
+  }
+  list.innerHTML = data.map(b => `
+    <div class="data-item">
+      <div class="data-item-icon" style="background:#F0FDF4;">🔧</div>
+      <div class="data-item-text">
+        <div class="data-item-title">${b.nama_bengkel}</div>
+        <div class="data-item-sub">${b.area}${b.spesialisasi ? ' · '+b.spesialisasi : ''}</div>
+      </div>
+      <div class="data-item-actions">
+        <div class="btn-icon edit" onclick="showBengkelForm(${JSON.stringify(b).replace(/"/g,"&quot;")})">✏️</div>
+        <div class="btn-icon del" onclick="confirmHapusBengkel('${b.id_bengkel}')">🗑</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showBengkelForm(b = null) {
+  const isEdit = !!b;
+  document.getElementById('bengkelModalTitle').textContent = isEdit ? 'Edit Bengkel' : 'Tambah Bengkel';
+  document.getElementById('bg-id-edit').value = isEdit ? b.id_bengkel : '';
+  document.getElementById('bg-nama').value   = isEdit ? b.nama_bengkel : '';
+  document.getElementById('bg-area').value   = isEdit ? b.area : '';
+  document.getElementById('bg-alamat').value = isEdit ? b.alamat : '';
+  document.getElementById('bg-telp').value   = isEdit ? b.telepon : '';
+  document.getElementById('bg-spesialis').value = isEdit ? (b.spesialisasi || 'Umum') : 'Umum';
+  document.getElementById('bg-hapus-wrap').style.display = isEdit ? 'block' : 'none';
+  document.getElementById('bg-err').classList.add('hidden');
+  openModal('bengkelModal');
+}
+
+async function saveBengkel() {
+  const idEdit = document.getElementById('bg-id-edit').value;
+  const isEdit = !!idEdit;
+  const nama   = document.getElementById('bg-nama').value.trim();
+  const area   = document.getElementById('bg-area').value.trim();
+  const err    = document.getElementById('bg-err');
+  if (!nama || !area) { err.textContent = '⚠ Nama dan Area wajib diisi'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  showLoading('Menyimpan bengkel...');
+  try {
+    const payload = isEdit
+      ? { action:'updateBengkel', id_bengkel:idEdit, nama_bengkel:nama, area, alamat:document.getElementById('bg-alamat').value.trim(), telepon:document.getElementById('bg-telp').value.trim(), spesialisasi:document.getElementById('bg-spesialis').value }
+      : { action:'addBengkel', nama_bengkel:nama, area, alamat:document.getElementById('bg-alamat').value.trim(), telepon:document.getElementById('bg-telp').value.trim(), spesialisasi:document.getElementById('bg-spesialis').value };
+    const rv = await apiPost(payload);
+    hideLoading();
+    if (!rv.success) { err.textContent = '⚠ ' + rv.error; err.classList.remove('hidden'); return; }
+    closeModal('bengkelModal');
+    showToast(isEdit ? 'Bengkel diperbarui ✓' : 'Bengkel ditambahkan ✓', 'success');
+    const rvB = await apiGet('getBengkel');
+    if (rvB.success) { dataCache.bengkel = rvB.data || []; renderBengkel(); }
+  } catch(e) { hideLoading(); err.textContent = '⚠ Gagal terhubung'; err.classList.remove('hidden'); }
+}
+
+function confirmHapusBengkel(id) {
+  closeModal('bengkelModal');
+  showConfirm('🔧', 'Hapus Bengkel?', 'Bengkel ini akan dihapus dari daftar.', async () => {
+    showLoading('Menghapus...');
+    const rv = await apiPost({ action:'deleteBengkel', id_bengkel:id });
+    hideLoading();
+    if (rv.success) {
+      showToast('Bengkel dihapus', 'success');
+      const rvB = await apiGet('getBengkel');
+      if (rvB.success) { dataCache.bengkel = rvB.data || []; renderBengkel(); }
+    } else showToast(rv.error || 'Gagal hapus', 'error');
+  });
+}
+
+// ── JADWAL SERVIS ─────────────────────────────────────────────────
+function loadJadwal() {
+  const filter = document.getElementById('jadwalFilter').value;
+  const list   = document.getElementById('jadwalList');
+  let data     = dataCache.jadwal;
+  if (filter) {
+    const [merk, ...rest] = filter.split(' ');
+    const model = rest.join(' ');
+    data = data.filter(j => j.merk_kendaraan === merk && j.model_kendaraan === model);
+  }
+  if (!data.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;">Belum ada jadwal servis</div>';
+    return;
+  }
+  list.innerHTML = data.map(j => `
+    <div class="jadwal-item">
+      <div class="jadwal-header">
+        <div style="flex:1;">
+          <div class="jadwal-title">${j.nama_part}</div>
+          <div style="font-size:11px;color:#94A3B8;margin-top:2px;">${j.merk_kendaraan} ${j.model_kendaraan}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="badge ${j.aktif==='Tidak'?'badge-nonaktif':'badge-aktif'}">${j.aktif==='Tidak'?'Non-aktif':'Aktif'}</span>
+          <label class="toggle-switch">
+            <input type="checkbox" ${j.aktif!=='Tidak'?'checked':''} onchange="toggleJadwal('${j.id_part}', this.checked)">
+            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          </label>
+        </div>
+      </div>
+      <div class="jadwal-meta">
+        ${j.interval_km ? `<span class="jadwal-meta-item">⚡ ${parseInt(j.interval_km).toLocaleString('id')} km</span>` : ''}
+        ${j.interval_hari ? `<span class="jadwal-meta-item">📅 ${j.interval_hari} hari</span>` : ''}
+        <span class="jadwal-meta-item">${j.kategori}</span>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;gap:6px;">
+        <div class="btn-icon edit" style="width:auto;padding:6px 12px;font-size:12px;gap:4px;" onclick="showJadwalForm(${JSON.stringify(j).replace(/"/g,"&quot;")})">✏️ Edit</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function toggleJadwal(id, aktif) {
+  const rv = await apiPost({ action:'updateJadwal', id_part:id, aktif: aktif ? 'Ya' : 'Tidak' });
+  if (!rv.success) showToast('Gagal update', 'error');
+  else showToast(aktif ? 'Diaktifkan ✓' : 'Dinonaktifkan', aktif ? 'success' : '');
+  // Update cache
+  const j = dataCache.jadwal.find(x => x.id_part === id);
+  if (j) j.aktif = aktif ? 'Ya' : 'Tidak';
+}
+
+function showJadwalForm(j = null) {
+  const isEdit = !!j;
+  document.getElementById('jadwalModalTitle').textContent = isEdit ? 'Edit Jadwal Servis' : 'Tambah Jadwal Servis';
+  document.getElementById('jd-id-edit').value = isEdit ? j.id_part : '';
+  document.getElementById('jd-nama').value = isEdit ? j.nama_part : '';
+  document.getElementById('jd-merk').value = isEdit ? j.merk_kendaraan : '';
+  document.getElementById('jd-model').value = isEdit ? j.model_kendaraan : '';
+  document.getElementById('jd-km').value = isEdit ? (j.interval_km || '') : '';
+  document.getElementById('jd-hari').value = isEdit ? (j.interval_hari || '') : '';
+  document.getElementById('jd-kategori').value = isEdit ? j.kategori : 'Rutin';
+  document.getElementById('jd-ket').value = isEdit ? (j.keterangan || '') : '';
+  document.getElementById('jd-err').classList.add('hidden');
+  openModal('jadwalModal');
+}
+
+async function saveJadwal() {
+  const idEdit = document.getElementById('jd-id-edit').value;
+  const isEdit = !!idEdit;
+  const nama   = document.getElementById('jd-nama').value.trim();
+  const merk   = document.getElementById('jd-merk').value;
+  const model  = document.getElementById('jd-model').value.trim();
+  const kategori = document.getElementById('jd-kategori').value;
+  const err    = document.getElementById('jd-err');
+  if (!nama || !merk || !model) { err.textContent = '⚠ Nama, Merk, dan Model wajib diisi'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  showLoading('Menyimpan jadwal...');
+  try {
+    const payload = {
+      action: isEdit ? 'updateJadwal' : 'addJadwal',
+      ...(isEdit ? { id_part:idEdit } : {}),
+      nama_part:nama, merk_kendaraan:merk, model_kendaraan:model,
+      kategori, interval_km:document.getElementById('jd-km').value || null,
+      interval_hari:document.getElementById('jd-hari').value || null,
+      keterangan:document.getElementById('jd-ket').value.trim()
+    };
+    const rv = await apiPost(payload);
+    hideLoading();
+    if (!rv.success) { err.textContent = '⚠ ' + rv.error; err.classList.remove('hidden'); return; }
+    closeModal('jadwalModal');
+    showToast('Jadwal disimpan ✓', 'success');
+    const rvJ = await apiGet('getJadwalServis');
+    if (rvJ.success) { dataCache.jadwal = rvJ.data || []; loadJadwal(); }
+  } catch(e) { hideLoading(); err.textContent = '⚠ Gagal terhubung'; err.classList.remove('hidden'); }
+}
+
+// ── USERS ─────────────────────────────────────────────────────────
+function renderUsers() {
+  const list = document.getElementById('usersList');
+  const data = dataCache.users;
+  const total = dataCache.users.length;
+
+  let html = `<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 12px;"><span style="font-size:12px;color:#94A3B8;font-weight:600;">${total}/5 anggota</span><div style="height:6px;width:80px;background:#E8EEF6;border-radius:99px;overflow:hidden;"><div style="height:100%;background:${total>=5?'var(--red)':'var(--orange)'};width:${(total/5)*100}%;border-radius:99px;transition:width .4s;"></div></div></div>`;
+
+  if (!data.length) {
+    list.innerHTML = html + '<div style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;">Belum ada anggota</div>';
+    return;
+  }
+  html += data.map(u => `
+    <div class="data-item" style="margin-bottom:8px;">
+      <div class="data-item-icon" style="background:${u.role==='Admin'?'#EFF6FF':'#F5F3FF'};">
+        ${u.role==='Admin'?'👑':'👤'}
+      </div>
+      <div class="data-item-text">
+        <div class="data-item-title">${u.nama_user}</div>
+        <div class="data-item-sub" style="display:flex;align-items:center;gap:6px;">
+          <span class="badge ${u.role==='Admin'?'badge-admin':'badge-anggota'}">${u.role}</span>
+          <span class="badge ${u.status==='Aktif'?'badge-aktif':'badge-nonaktif'}">${u.status}</span>
+        </div>
+      </div>
+      <div class="data-item-actions">
+        <div class="btn-icon edit" onclick='showUserForm(${JSON.stringify(u)})'>✏️</div>
+      </div>
+    </div>
+  `).join('');
+  list.innerHTML = html;
+}
+
+function showUserForm(u = null) {
+  const isEdit = !!u;
+  document.getElementById('userModalTitle').textContent = isEdit ? 'Edit Anggota' : 'Tambah Anggota';
+  document.getElementById('us-id-edit').value = isEdit ? u.id_user : '';
+  document.getElementById('us-nama').value    = isEdit ? u.nama_user : '';
+  document.getElementById('us-role').value    = isEdit ? u.role : 'Anggota';
+  document.getElementById('us-status').value  = isEdit ? u.status : 'Aktif';
+  document.getElementById('us-status-wrap').style.display = isEdit ? 'block' : 'none';
+  if (!isEdit && dataCache.users.length >= 5) {
+    showToast('Maks 5 anggota', 'error'); return;
+  }
+  document.getElementById('us-err').classList.add('hidden');
+  openModal('userModal');
+}
+
+async function saveUser() {
+  const idEdit = document.getElementById('us-id-edit').value;
+  const isEdit = !!idEdit;
+  const nama   = document.getElementById('us-nama').value.trim();
+  const err    = document.getElementById('us-err');
+  if (!nama) { err.textContent = '⚠ Nama tidak boleh kosong'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  showLoading('Menyimpan...');
+  try {
+    const payload = isEdit
+      ? { action:'updateUser', id_user:idEdit, nama_user:nama, role:document.getElementById('us-role').value, status:document.getElementById('us-status').value }
+      : { action:'addUser', nama_user:nama, role:document.getElementById('us-role').value };
+    const rv = await apiPost(payload);
+    hideLoading();
+    if (!rv.success) { err.textContent = '⚠ ' + rv.error; err.classList.remove('hidden'); return; }
+    closeModal('userModal');
+    showToast(isEdit ? 'Anggota diperbarui ✓' : 'Anggota ditambahkan ✓', 'success');
+    const rvU = await apiGet('getUsers');
+    if (rvU.success) { dataCache.users = rvU.data || []; renderUsers(); }
+  } catch(e) { hideLoading(); err.textContent = '⚠ Gagal terhubung'; err.classList.remove('hidden'); }
+}
+
+// ── CHANGE PIN ────────────────────────────────────────────────────
+function showChangePin() {
+  document.getElementById('cp-new').value = '';
+  document.getElementById('cp-confirm').value = '';
+  document.getElementById('cp-err').classList.add('hidden');
+  openModal('changePinModal');
+}
+
+async function savePin() {
+  const pin  = document.getElementById('cp-new').value.trim();
+  const conf = document.getElementById('cp-confirm').value.trim();
+  const err  = document.getElementById('cp-err');
+  if (!pin || pin.length < 4) { err.textContent = '⚠ PIN minimal 4 digit'; err.classList.remove('hidden'); return; }
+  if (pin !== conf) { err.textContent = '⚠ PIN tidak cocok'; err.classList.remove('hidden'); return; }
+  if (!/^\d+$/.test(pin)) { err.textContent = '⚠ PIN harus angka'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  showLoading('Menyimpan PIN baru...');
+  try {
+    const rv = await apiPost({ action:'setPin', pin, pin_confirm:conf });
+    hideLoading();
+    if (!rv.success) { err.textContent = '⚠ ' + rv.error; err.classList.remove('hidden'); return; }
+    localStorage.setItem(PIN_KEY, pin);
+    closeModal('changePinModal');
+    showToast('PIN berhasil diubah ✓', 'success');
+  } catch(e) { hideLoading(); err.textContent = '⚠ Gagal terhubung'; err.classList.remove('hidden'); }
+}
+
+// ── BACKUP ───────────────────────────────────────────────────────
+async function exportBackup() {
+  showLoading('Menyiapkan backup...');
+  try {
+    const rv = await apiGet('exportBackup');
+    hideLoading();
+    if (!rv.success) { showToast(rv.error || 'Gagal export', 'error'); return; }
+    // If backend returns a URL for download
+    if (rv.data && rv.data.url) {
+      window.open(rv.data.url, '_blank');
+      showToast('File backup berhasil dibuat ✓', 'success');
+    } else {
+      showToast('Backup selesai. Cek Google Drive ✓', 'success');
+    }
+  } catch(e) { hideLoading(); showToast('Gagal terhubung ke server', 'error'); }
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────
+function navTo(tab) {
+  // In production, these navigate to separate HTML pages
+  const urls = {
+    home:    'garasi-idr-dashboard.html',
+    servis:  'garasi-idr-tahap4-quick-service.html',
+    cari:    'garasi-idr-tahap7-search-laporan.html',
+    laporan: 'garasi-idr-tahap7-search-laporan.html',
+    admin:   'garasi-idr-tahap8-admin-onboarding.html'
+  };
+  if (tab === 'admin') return;
+  showToast(`Menuju ${tab === 'home' ? 'Dashboard' : tab === 'servis' ? 'Catat Servis' : tab === 'cari' ? 'Pencarian' : 'Laporan'}...`);
+  // Uncomment to enable actual navigation:
+  // if (urls[tab]) window.location.href = urls[tab];
+}
+
+// ── API HELPERS ──────────────────────────────────────────────────
+async function apiGet(action, params = {}) {
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  const res = await fetch(`${SCRIPT_URL}?${qs}`, { redirect:'follow' });
+  return res.json();
+}
+
+async function apiPost(payload) {
+  const qs = new URLSearchParams(payload).toString();
+  const res = await fetch(`${SCRIPT_URL}?${qs}`, {
+    redirect:'follow'
+  });
+  return res.json();
+}
+// ── MODAL HELPERS ────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => {
+    if (e.target === el) closeModal(el.id);
+  });
+});
+
+function showConfirm(icon, title, desc, cb) {
+  document.getElementById('confirmIcon').textContent = icon;
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmDesc').textContent = desc;
+  confirmCb = cb;
+  document.getElementById('confirmOkBtn').onclick = () => { closeModal('confirmModal'); if (confirmCb) confirmCb(); };
+  openModal('confirmModal');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  clearTimeout(toastTimer);
+  requestAnimationFrame(() => {
+    t.classList.add('show');
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  });
+}
+
+// ── LOADING ───────────────────────────────────────────────────────
+function showLoading(msg = 'Memuat...') {
+  document.getElementById('loadingText').textContent = msg;
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+// ── KEYBOARD ─────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lockScreen').classList.contains('hidden')) {
+    if (e.key >= '0' && e.key <= '9') lockKeyPress(e.key);
+    if (e.key === 'Backspace') lockKeyDel();
+  }
+});
+</script>
+</body>
+</html>

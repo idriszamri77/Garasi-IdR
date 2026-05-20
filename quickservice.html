@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Garasi IdR — Catat Servis</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #F05E0E;
+    --navy: #0F1F4B;
+    --green: #22C55E;
+    --yellow: #F59E0B;
+    --red: #EF4444;
+    --blue: #3B82F6;
+    --gray: #9CA3AF;
+  }
+
+  * { -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F8FAFC; }
+
+  .font-display { font-family: 'Syne', sans-serif; }
+
+  /* Bottom Nav */
+  .bottom-nav { height: 64px; background: #fff; border-top: 1px solid #E2E8F0; }
+  .nav-icon { transition: color 0.15s; }
+  .nav-icon.active-home { color: #E8622A; }
+  .nav-icon.active-servis { color: #4A90D9; }
+  .nav-icon.active-cari { color: #7C6FCD; }
+  .nav-icon.active-laporan { color: #3DAA72; }
+  .nav-icon.active-admin { color: #888EA8; }
+  .nav-icon.inactive { color: #B0B8C8; }
+
+  /* Cards */
+  .kendaraan-card { background: var(--navy); border-radius: 12px; }
+  .btn-primary { background: var(--orange); color: #fff; border-radius: 8px; min-height: 48px; font-weight: 600; transition: all 0.15s; }
+  .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+  .btn-secondary { border: 1.5px solid var(--orange); color: var(--orange); background: transparent; border-radius: 8px; min-height: 44px; font-weight: 600; transition: all 0.15s; }
+  .btn-secondary:active { background: #FFF4EF; }
+
+  /* Template buttons */
+  .template-btn { border: 2px solid #E2E8F0; border-radius: 10px; transition: all 0.15s; background: #fff; cursor: pointer; }
+  .template-btn.selected { border-color: var(--orange); background: #FFF4EF; }
+  .template-btn:active { transform: scale(0.97); }
+
+  /* Item table */
+  .item-row { animation: slideIn 0.2s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Input fields */
+  input, select, textarea {
+    border: 1px solid #E2E8F0; border-radius: 8px;
+    padding: 12px; font-size: 14px; width: 100%;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #fff; color: #1E293B;
+    transition: border-color 0.15s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--orange); }
+  input.error, select.error { border-color: var(--red); }
+
+  /* Total display */
+  .total-display { font-size: 28px; font-weight: 700; color: var(--orange); font-family: 'Syne', sans-serif; }
+
+  /* Badge */
+  .badge { border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 500; }
+  .badge-ok { background: #DCFCE7; color: #15803D; }
+  .badge-warning { background: #FEF9C3; color: #92400E; }
+  .badge-danger { background: #FEE2E2; color: #B91C1C; }
+
+  /* Collapsible */
+  .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+  .collapsible-content.open { max-height: 400px; }
+
+  /* Modal overlay */
+  .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1E293B; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; transition: transform 0.3s ease; z-index: 999; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: #15803D; }
+  .toast.error { background: #B91C1C; }
+
+  /* Shimmer loading */
+  .shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* Switch toggle */
+  .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: #E2E8F0; border-radius: 24px; cursor: pointer; transition: 0.3s; }
+  .toggle-slider:before { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: 0.3s; }
+  .toggle input:checked + .toggle-slider { background: var(--orange); }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+  /* Number input - remove arrows */
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type=number] { -moz-appearance: textfield; }
+
+  /* Success animation */
+  .success-check { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+  /* Odometer warning dialog */
+  .warning-dialog { border-radius: 16px; overflow: hidden; }
+
+  /* Progress bar */
+  .progress-bar { height: 4px; border-radius: 2px; background: #E2E8F0; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+
+  /* Scroll */
+  .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- ===================== HEADER ===================== -->
+<div class="sticky top-0 z-40" style="background: var(--navy); height: 56px;">
+  <div class="flex items-center h-full px-4 gap-3">
+    <button id="btnBack" onclick="history.back()" class="text-white/70 hover:text-white p-1">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M19 12H5M5 12l6-6M5 12l6 6"/></svg>
+    </button>
+    <span class="font-display text-white text-lg font-bold tracking-wide">Catat Servis</span>
+    <!-- Step indicator -->
+    <div class="ml-auto flex items-center gap-1.5" id="stepIndicator">
+      <div class="w-6 h-1.5 rounded-full bg-orange-400 step-dot" data-step="1"></div>
+      <div class="w-6 h-1.5 rounded-full bg-white/20 step-dot" data-step="2"></div>
+      <div class="w-6 h-1.5 rounded-full bg-white/20 step-dot" data-step="3"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MAIN CONTENT ===================== -->
+<div class="flex-1 pb-20" id="mainContent">
+
+  <!-- ========== STEP 1: USER + KENDARAAN ========== -->
+  <div id="step1" class="px-4 pt-5 space-y-4">
+
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Langkah 1 dari 3</p>
+      <h2 class="font-display text-xl font-bold text-gray-800">Siapa yang mencatat?</h2>
+      <p class="text-sm text-gray-500 mt-1">Pilih nama kamu dan kendaraan yang diservis.</p>
+    </div>
+
+    <!-- Pilih User -->
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Kamu <span class="text-red-500">*</span></label>
+      <div class="relative">
+        <select id="selectUser" onchange="onUserChange()" class="pr-10">
+          <option value="">— Pilih nama —</option>
+        </select>
+        <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400 mt-1.5">Hanya nama aktif yang tampil. Admin kelola user di menu Admin.</p>
+    </div>
+
+    <!-- Pilih Kendaraan -->
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-2">Kendaraan <span class="text-red-500">*</span></label>
+      <div class="space-y-2.5" id="kendaraanList">
+        <!-- Kendaraan cards rendered by JS -->
+        <div class="shimmer h-20 w-full"></div>
+        <div class="shimmer h-20 w-full"></div>
+        <div class="shimmer h-20 w-full"></div>
+      </div>
+    </div>
+
+    <button onclick="goToStep2()" class="btn-primary w-full text-base mt-2" id="btnStep1Next">
+      Lanjut Pilih Servis
+      <svg class="inline ml-2" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+
+    <!-- Link ke Full Form -->
+    <div class="text-center pb-2">
+      <button onclick="showFullFormHint()" class="text-sm text-gray-400 underline underline-offset-2">Perlu form lebih lengkap?</button>
+    </div>
+  </div>
+
+  <!-- ========== STEP 2: TEMPLATE ========== -->
+  <div id="step2" class="hidden px-4 pt-5 space-y-4">
+
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Langkah 2 dari 3</p>
+      <h2 class="font-display text-xl font-bold text-gray-800">Jenis Servis</h2>
+    </div>
+
+    <!-- Selected kendaraan summary -->
+    <div class="kendaraan-card p-4" id="selectedKendaraanCard">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-white font-semibold text-base" id="cardNamaKendaraan">—</p>
+          <p class="text-white/60 text-xs mt-0.5" id="cardKmKendaraan">—</p>
+        </div>
+        <button onclick="goToStep1()" class="text-white/60 text-xs underline underline-offset-2">Ganti</button>
+      </div>
+    </div>
+
+    <!-- Template pilihan -->
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-3">Pilih Template Servis <span class="text-red-500">*</span></label>
+      <div class="grid grid-cols-2 gap-3" id="templateGrid">
+        <!-- Templates rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Preview items template -->
+    <div id="templatePreview" class="hidden">
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Preview Item:</p>
+      <div id="previewItems" class="space-y-1.5"></div>
+    </div>
+
+    <button onclick="goToStep3()" class="btn-primary w-full text-base" id="btnStep2Next">
+      Lanjut Isi Detail
+      <svg class="inline ml-2" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+    <button onclick="goToStep1()" class="btn-secondary w-full text-sm">← Kembali</button>
+  </div>
+
+  <!-- ========== STEP 3: DETAIL + ITEM + SIMPAN ========== -->
+  <div id="step3" class="hidden">
+
+    <!-- Sub-header info -->
+    <div class="px-4 pt-5 pb-3 space-y-1">
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Langkah 3 dari 3</p>
+      <h2 class="font-display text-xl font-bold text-gray-800">Detail Servis</h2>
+    </div>
+
+    <!-- KM + Tanggal + Bengkel -->
+    <div class="px-4 space-y-3">
+
+      <!-- KM -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+          KM Saat Servis <span class="text-red-500">*</span>
+          <span class="text-xs font-normal text-gray-400 ml-1" id="kmHint"></span>
+        </label>
+        <div class="relative">
+          <input type="number" id="inputKm" placeholder="Contoh: 12500" oninput="onKmInput()" class="pr-16">
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium">km</span>
+        </div>
+        <div id="kmError" class="text-xs text-red-500 mt-1 hidden"></div>
+      </div>
+
+      <!-- Tanggal -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal Servis <span class="text-red-500">*</span></label>
+        <input type="date" id="inputTanggal" onchange="validateTanggal()">
+        <div id="tanggalError" class="text-xs text-red-500 mt-1 hidden"></div>
+      </div>
+
+      <!-- Bengkel -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Bengkel <span class="text-red-500">*</span></label>
+        <div class="relative">
+          <select id="selectBengkel" class="pr-10">
+            <option value="">— Pilih bengkel —</option>
+          </select>
+          <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Bengkel baru bisa ditambah Admin di menu Admin → Bengkel.</p>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="h-px bg-gray-100 mx-4 my-4"></div>
+
+    <!-- Item Servis table - like kasir/nota -->
+    <div class="px-4">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-sm font-semibold text-gray-700">Item Servis</p>
+        <span class="badge badge-ok" id="itemCountBadge">0 item</span>
+      </div>
+
+      <!-- Table header -->
+      <div class="grid text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1" style="grid-template-columns: 1fr 100px 80px 32px;">
+        <span>Nama Item</span>
+        <span>Kategori</span>
+        <span class="text-right">Biaya</span>
+        <span></span>
+      </div>
+
+      <!-- Item rows -->
+      <div id="itemRows" class="space-y-2">
+        <!-- rows injected here -->
+      </div>
+
+      <!-- Tambah Item -->
+      <button onclick="tambahItem()" class="mt-3 w-full border-2 border-dashed border-gray-200 hover:border-orange-300 rounded-10px py-3 flex items-center justify-center gap-2 text-sm font-semibold text-gray-400 hover:text-orange-500 transition-colors" style="border-radius: 10px;">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+        + Tambah Item
+      </button>
+    </div>
+
+    <!-- Total Biaya -->
+    <div class="mx-4 mt-4 p-4 rounded-12px" style="background: #FFF4EF; border-radius: 12px;">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-semibold text-gray-600">Total Biaya</span>
+        <span class="total-display" id="totalDisplay">Rp 0</span>
+      </div>
+      <div class="progress-bar mt-2" id="biayaProgressBar" title="Estimasi biaya">
+        <div class="progress-fill bg-orange-400" id="biayaProgressFill" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Catatan Bengkel — collapsible -->
+    <div class="mx-4 mt-4 border border-gray-100 rounded-12px overflow-hidden" style="border-radius: 12px;">
+      <button onclick="toggleCatatan()" class="w-full flex items-center justify-between p-4 text-sm font-semibold text-gray-700 bg-white">
+        <div class="flex items-center gap-2">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#F97316" stroke-width="2" stroke-linecap="round" d="M8 10h8M8 14h5"/><rect stroke="#F97316" stroke-width="2" x="3" y="4" width="18" height="16" rx="3"/></svg>
+          Catatan Bengkel
+          <span class="badge" style="background:#FFF7ED;color:#C2410C;font-size:10px;">Opsional</span>
+        </div>
+        <svg id="catatanChevron" width="16" height="16" fill="none" viewBox="0 0 24 24" class="transition-transform"><path stroke="currentColor" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div id="catatanContent" class="collapsible-content">
+        <div class="px-4 pb-4 space-y-3 bg-white border-t border-gray-50">
+          <div class="flex items-center justify-between pt-3">
+            <div>
+              <p class="text-sm font-medium text-gray-700">Perlu Tindak Lanjut?</p>
+              <p class="text-xs text-gray-400">Contoh: kampas rem mulai tipis</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggleFollowup" onchange="onFollowupChange()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="catatanFollowupBox" class="hidden">
+            <textarea id="inputCatatanFollowup" rows="3" placeholder="Catatan dari bengkel... (opsional)" style="resize:none;"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">Catatan Umum</label>
+            <textarea id="inputCatatan" rows="2" placeholder="Catatan tambahan..." style="resize:none;"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simpan -->
+    <div class="px-4 pt-5 pb-4 space-y-3">
+      <button onclick="simpanServis()" class="btn-primary w-full text-base" id="btnSimpan">
+        <span id="btnSimpanText">💾 Simpan Servis</span>
+        <span id="btnSimpanLoader" class="hidden">
+          <svg class="animate-spin inline w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"/><path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8v8z"/></svg>
+          Menyimpan...
+        </span>
+      </button>
+      <button onclick="goToStep2()" class="btn-secondary w-full text-sm">← Kembali</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== BOTTOM NAV ===================== -->
+<nav class="bottom-nav fixed bottom-0 left-0 right-0 z-40 flex items-stretch">
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5 nav-icon inactive" onclick="navTo('home')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1V10z"/><path stroke="currentColor" stroke-width="2" d="M9 21V12h6v9"/></svg>
+    <span class="text-[10px] font-medium">Home</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5 nav-icon active-servis">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3-3a1 1 0 000-1.4l-1.6-1.6a1 1 0 00-1.4 0l-3 3zM9 13l-4 4a2 2 0 002.8 2.8L12 16M9 13l2-2"/></svg>
+    <span class="text-[10px] font-medium" style="color:#4A90D9;">Servis</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5 nav-icon inactive" onclick="navTo('cari')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><circle stroke="currentColor" stroke-width="2" cx="11" cy="11" r="7"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M20 20l-4-4"/></svg>
+    <span class="text-[10px] font-medium">Cari</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5 nav-icon inactive" onclick="navTo('laporan')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect stroke="currentColor" stroke-width="2" x="3" y="3" width="18" height="18" rx="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 17v-5M12 17v-9M16 17v-3"/></svg>
+    <span class="text-[10px] font-medium">Laporan</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5 nav-icon inactive" onclick="navTo('admin')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><circle stroke="currentColor" stroke-width="2" cx="12" cy="12" r="3"/><path stroke="currentColor" stroke-width="2" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span class="text-[10px] font-medium">Admin</span>
+  </a>
+</nav>
+
+<!-- ===================== MODAL: ODOMETER WARNING ===================== -->
+<div id="modalOdometer" class="hidden fixed inset-0 z-50 flex items-end justify-center modal-overlay px-4 pb-8">
+  <div class="warning-dialog bg-white w-full max-w-sm shadow-2xl">
+    <div class="p-5">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:#FEF9C3;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#D97706" stroke-width="2" stroke-linecap="round" d="M12 8v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-800 text-sm">KM Naik Cukup Jauh</p>
+          <p class="text-sm text-gray-500 mt-1" id="odoWarningText">KM naik sekitar <b>X km</b> dari terakhir tercatat. Apakah ini benar?</p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-5">
+        <button onclick="dismissOdoWarning()" class="btn-secondary flex-1 text-sm py-2.5">← Koreksi KM</button>
+        <button onclick="confirmOdoWarning()" class="btn-primary flex-1 text-sm py-2.5">Benar, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: SUCCESS ===================== -->
+<div id="modalSuccess" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay px-6">
+  <div class="bg-white rounded-2xl p-8 w-full max-w-xs text-center shadow-2xl">
+    <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 success-check" style="background:#DCFCE7;">
+      <svg width="40" height="40" fill="none" viewBox="0 0 24 24"><path stroke="#16A34A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h3 class="font-display text-xl font-bold text-gray-800">Servis Tercatat!</h3>
+    <p class="text-sm text-gray-500 mt-2" id="successDetail">Data berhasil disimpan.</p>
+    <div class="mt-6 space-y-2.5">
+      <button onclick="closeSuccess()" class="btn-primary w-full text-sm">Kembali ke Dashboard</button>
+      <button onclick="resetForm()" class="btn-secondary w-full text-sm">Catat Servis Lagi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: DUPLIKAT ITEM WARNING ===================== -->
+<div id="modalDuplikat" class="hidden fixed inset-0 z-50 flex items-end justify-center modal-overlay px-4 pb-8">
+  <div class="warning-dialog bg-white w-full max-w-sm shadow-2xl">
+    <div class="p-5">
+      <p class="font-semibold text-gray-800 text-sm">Item Sudah Ada</p>
+      <p class="text-sm text-gray-500 mt-1" id="duplikatText">Item ini sudah ada di daftar. Tetap tambahkan?</p>
+      <div class="flex gap-3 mt-5">
+        <button onclick="closeDuplikat()" class="btn-secondary flex-1 text-sm py-2.5">Batalkan</button>
+        <button onclick="confirmDuplikat()" class="btn-primary flex-1 text-sm py-2.5">Tetap Tambahkan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TOAST ===================== -->
+<div id="toast" class="toast"></div>
+
+<!-- ===================== SCRIPT ===================== -->
+<script>
+// ============================================================
+// CONFIG — Ganti APPS_SCRIPT_URL dengan URL Web App kamu
+// ============================================================
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyc-9p2v_OwoMvbDoIIPXO5rOIeJv_WaY2iJeGiB_aHgatogwohiTBVhzDzHDNOay1glg/exec';
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  users: [],
+  kendaraan: [],
+  bengkel: [],
+  jadwalServis: [],
+  selectedUser: null,
+  selectedKendaraan: null,
+  selectedTemplate: null,
+  items: [],          // [{nama, kategori_biaya, biaya, id_part, tipe_input}]
+  kmOk: false,
+  tanggalOk: false,
+  odoWarningCallback: null,
+  duplikatCallback: null,
+  currentStep: 1,
+};
+
+// ============================================================
+// TEMPLATE DEFINITIONS
+// ============================================================
+const TEMPLATES = {
+  'ganti-oli': {
+    label: 'Ganti Oli',
+    icon: '🛢️',
+    desc: 'Oli + filter oli',
+    color: '#FEF3C7',
+    iconColor: '#D97706',
+    items: [
+      { nama: 'Oli mesin', kategori_biaya: 'Oli/Cairan', biaya: 65000 },
+      { nama: 'Jasa ganti oli', kategori_biaya: 'Jasa', biaya: 20000 },
+    ]
+  },
+  'servis-ringan': {
+    label: 'Servis Ringan',
+    icon: '🔧',
+    desc: 'Oli + cek & setel',
+    color: '#EFF6FF',
+    iconColor: '#2563EB',
+    items: [
+      { nama: 'Oli mesin', kategori_biaya: 'Oli/Cairan', biaya: 65000 },
+      { nama: 'Servis ringan (cek & setel)', kategori_biaya: 'Jasa', biaya: 35000 },
+      { nama: 'Filter udara (cek)', kategori_biaya: 'Jasa', biaya: 10000 },
+    ]
+  },
+  'servis-berkala': {
+    label: 'Servis Berkala',
+    icon: '⚙️',
+    desc: 'Oli + filter + tune-up',
+    color: '#F0FDF4',
+    iconColor: '#16A34A',
+    items: [
+      { nama: 'Oli mesin', kategori_biaya: 'Oli/Cairan', biaya: 65000 },
+      { nama: 'Filter oli', kategori_biaya: 'Sparepart', biaya: 25000 },
+      { nama: 'Busi', kategori_biaya: 'Sparepart', biaya: 30000 },
+      { nama: 'Servis berkala (tune-up)', kategori_biaya: 'Jasa', biaya: 75000 },
+    ]
+  },
+  'custom': {
+    label: 'Custom',
+    icon: '✏️',
+    desc: 'Isi sendiri',
+    color: '#F8FAFC',
+    iconColor: '#64748B',
+    items: []
+  },
+};
+
+const KATEGORI_BIAYA = ['Oli/Cairan', 'Sparepart', 'Jasa', 'Ban', 'Emergency'];
+
+// ============================================================
+// INIT — Fetch data from Apps Script
+// ============================================================
+async function fetchAll() {
+  try {
+    // Fetch users
+    const [usersRes, kendaraanRes, bengkelRes, jadwalRes] = await Promise.all([
+      apiFetch('getUsers'),
+      apiFetch('getKendaraanAktif'),
+      apiFetch('getBengkel'),
+      apiFetch('getJadwalServis'),
+    ]);
+    state.users = usersRes || MOCK_USERS;
+    state.kendaraan = kendaraanRes || MOCK_KENDARAAN;
+    state.bengkel = bengkelRes || MOCK_BENGKEL;
+    state.jadwalServis = jadwalRes || [];
+  } catch(e) {
+    // Fallback ke mock data jika belum ada backend
+    state.users = MOCK_USERS;
+    state.kendaraan = MOCK_KENDARAAN;
+    state.bengkel = MOCK_BENGKEL;
+  }
+  renderStep1();
+}
+
+async function apiFetch(action, params = {}) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    return null; // Will use mock data
+  }
+  const url = new URL(APPS_SCRIPT_URL);
+  url.searchParams.set('action', action);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString());
+  const data = await res.json();
+  return data.data || data;
+}
+
+// ============================================================
+// MOCK DATA (untuk development / sebelum backend jadi)
+// ============================================================
+const MOCK_USERS = [
+  { id_user: 'U001', nama_user: 'Ayah', role: 'Admin', status: 'Aktif' },
+  { id_user: 'U002', nama_user: 'Bunda', role: 'Anggota', status: 'Aktif' },
+  { id_user: 'U003', nama_user: 'Dika', role: 'Anggota', status: 'Aktif' },
+];
+
+const MOCK_KENDARAAN = [
+  { plat_nomor: 'L 2345 ABC', merk: 'Honda', model: 'PCX 160', tahun: 2022, warna: 'Putih', pemilik: 'Ayah', km_terakhir: 12400, status: 'Aktif' },
+  { plat_nomor: 'L 6789 DEF', merk: 'Yamaha', model: 'Gear 125', tahun: 2021, warna: 'Hitam', pemilik: 'Bunda', km_terakhir: 8900, status: 'Aktif' },
+  { plat_nomor: 'L 1010 GHI', merk: 'Honda', model: 'Jazz', tahun: 2020, warna: 'Silver', pemilik: 'Keluarga', km_terakhir: 34500, status: 'Aktif' },
+];
+
+const MOCK_BENGKEL = [
+  { id_bengkel: 'BK001', nama_bengkel: 'Ahass Sumber Motor', area: 'Rungkut', spesialisasi: 'Motor' },
+  { id_bengkel: 'BK002', nama_bengkel: 'Bengkel Pak Hendra', area: 'Waru', spesialisasi: 'Umum' },
+  { id_bengkel: 'BK003', nama_bengkel: 'Auto 2000', area: 'Ahmad Yani', spesialisasi: 'Mobil' },
+];
+
+// ============================================================
+// RENDER STEP 1
+// ============================================================
+function renderStep1() {
+  // Users dropdown
+  const sel = document.getElementById('selectUser');
+  sel.innerHTML = '<option value="">— Pilih nama —</option>';
+  state.users.filter(u => u.status === 'Aktif').forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.id_user;
+    opt.textContent = u.nama_user + (u.role === 'Admin' ? ' (Admin)' : '');
+    sel.appendChild(opt);
+  });
+  if (state.selectedUser) sel.value = state.selectedUser.id_user;
+
+  // Kendaraan cards
+  const list = document.getElementById('kendaraanList');
+  list.innerHTML = '';
+  state.kendaraan.filter(k => k.status === 'Aktif').forEach(k => {
+    const isSelected = state.selectedKendaraan?.plat_nomor === k.plat_nomor;
+    const div = document.createElement('div');
+    div.className = `kendaraan-card p-4 cursor-pointer transition-all ${isSelected ? 'ring-2 ring-orange-400' : 'opacity-90'}`;
+    div.onclick = () => selectKendaraan(k);
+    div.innerHTML = `
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-white font-semibold text-base">${k.merk} ${k.model} <span class="text-white/50 text-xs font-normal">${k.tahun}</span></p>
+          <p class="text-white/60 text-xs mt-0.5">${k.plat_nomor} • ${k.warna} • ${k.pemilik}</p>
+          <p class="text-white/50 text-xs mt-1">KM Terakhir: <span class="text-white/80 font-medium">${k.km_terakhir.toLocaleString('id-ID')} km</span></p>
+        </div>
+        <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isSelected ? 'bg-orange-400' : 'bg-white/10'}">
+          ${isSelected ? '<svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="white" stroke-width="3" stroke-linecap="round" d="M5 13l4 4L19 7"/></svg>' : ''}
+        </div>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function selectKendaraan(k) {
+  state.selectedKendaraan = k;
+  renderStep1();
+}
+
+function onUserChange() {
+  const uid = document.getElementById('selectUser').value;
+  state.selectedUser = state.users.find(u => u.id_user === uid) || null;
+}
+
+// ============================================================
+// RENDER STEP 2 — Template
+// ============================================================
+function renderStep2() {
+  // Update selected kendaraan card
+  const k = state.selectedKendaraan;
+  document.getElementById('cardNamaKendaraan').textContent = `${k.merk} ${k.model} — ${k.plat_nomor}`;
+  document.getElementById('cardKmKendaraan').textContent = `KM Terakhir: ${k.km_terakhir.toLocaleString('id-ID')} km`;
+
+  // Template grid
+  const grid = document.getElementById('templateGrid');
+  grid.innerHTML = '';
+  Object.entries(TEMPLATES).forEach(([key, tmpl]) => {
+    const isSelected = state.selectedTemplate === key;
+    const div = document.createElement('div');
+    div.className = `template-btn p-4 ${isSelected ? 'selected' : ''}`;
+    div.onclick = () => selectTemplate(key);
+    div.innerHTML = `
+      <div class="text-2xl mb-2">${tmpl.icon}</div>
+      <p class="font-semibold text-gray-800 text-sm">${tmpl.label}</p>
+      <p class="text-xs text-gray-400 mt-0.5">${tmpl.desc}</p>
+      ${isSelected ? '<div class="mt-2 w-full h-0.5 rounded-full bg-orange-400"></div>' : ''}
+    `;
+    grid.appendChild(div);
+  });
+
+  // Preview items
+  renderTemplatePreview();
+}
+
+function selectTemplate(key) {
+  state.selectedTemplate = key;
+  renderStep2();
+}
+
+function renderTemplatePreview() {
+  const tmpl = TEMPLATES[state.selectedTemplate];
+  const preview = document.getElementById('templatePreview');
+  const previewItems = document.getElementById('previewItems');
+
+  if (!tmpl || tmpl.items.length === 0) {
+    preview.classList.add('hidden');
+    return;
+  }
+  preview.classList.remove('hidden');
+  previewItems.innerHTML = tmpl.items.map(item => `
+    <div class="flex items-center justify-between py-1.5 px-3 bg-gray-50 rounded-8px text-sm" style="border-radius:8px;">
+      <span class="text-gray-700">${item.nama}</span>
+      <span class="text-gray-400 text-xs">${formatRupiah(item.biaya)}</span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// RENDER STEP 3
+// ============================================================
+function renderStep3() {
+  // Set default tanggal = hari ini
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inputTanggal').value = today;
+  state.tanggalOk = true;
+
+  // KM hint
+  document.getElementById('kmHint').textContent = `(terakhir: ${state.selectedKendaraan.km_terakhir.toLocaleString('id-ID')} km)`;
+
+  // Bengkel dropdown
+  const selBengkel = document.getElementById('selectBengkel');
+  selBengkel.innerHTML = '<option value="">— Pilih bengkel —</option>';
+  // Filter bengkel sesuai tipe kendaraan
+  const isMobil = ['Jazz', 'Avanza', 'Innova', 'Brio'].includes(state.selectedKendaraan.model);
+  state.bengkel.forEach(b => {
+    // Tampilkan semua (Umum + sesuai spesialisasi)
+    const opt = document.createElement('option');
+    opt.value = b.id_bengkel;
+    opt.textContent = `${b.nama_bengkel} — ${b.area}`;
+    selBengkel.appendChild(opt);
+  });
+
+  // Load items dari template
+  if (state.selectedTemplate && state.selectedTemplate !== 'custom') {
+    state.items = TEMPLATES[state.selectedTemplate].items.map((item, i) => ({
+      ...item, id: Date.now() + i, tipe_input: 'Template', id_part: null
+    }));
+  } else if (state.items.length === 0) {
+    // Custom: mulai dengan 1 baris kosong
+    state.items = [createEmptyItem()];
+  }
+
+  renderItems();
+}
+
+function createEmptyItem() {
+  return { id: Date.now(), nama: '', kategori_biaya: 'Jasa', biaya: 0, tipe_input: 'Manual', id_part: null };
+}
+
+// ============================================================
+// ITEM MANAGEMENT
+// ============================================================
+function renderItems() {
+  const container = document.getElementById('itemRows');
+  container.innerHTML = '';
+
+  state.items.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.style.cssText = 'display: grid; gap: 6px; grid-template-columns: 1fr 100px 80px 32px; align-items: center;';
+    row.innerHTML = `
+      <!-- Nama -->
+      <div class="relative">
+        <input type="text" value="${escapeHtml(item.nama)}" placeholder="Nama item..."
+          oninput="updateItem(${idx}, 'nama', this.value)"
+          onblur="checkAutocomplete(${idx}, this.value)"
+          class="text-sm py-2 px-3 ${item.nama === '' ? 'error' : ''}" style="font-size:13px;">
+        <div id="autocomplete_${idx}" class="hidden absolute left-0 right-0 top-full bg-white border border-gray-200 rounded-b-lg z-20 shadow-lg max-h-32 overflow-y-auto"></div>
+      </div>
+      <!-- Kategori -->
+      <div class="relative">
+        <select onchange="updateItem(${idx}, 'kategori_biaya', this.value)" class="text-xs py-2 px-2 pr-6">
+          ${KATEGORI_BIAYA.map(k => `<option value="${k}" ${item.kategori_biaya===k?'selected':''}>${k}</option>`).join('')}
+        </select>
+      </div>
+      <!-- Biaya -->
+      <div>
+        <input type="number" value="${item.biaya || ''}" placeholder="0"
+          oninput="updateItem(${idx}, 'biaya', this.value)"
+          class="text-sm py-2 px-2 text-right ${item.biaya <= 0 ? 'error' : ''}" style="font-size:13px;">
+      </div>
+      <!-- Hapus -->
+      <button onclick="hapusItem(${idx})" class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-red-50 text-gray-300 hover:text-red-400 transition-colors flex-shrink-0">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    `;
+    container.appendChild(row);
+  });
+
+  updateTotal();
+  updateItemBadge();
+}
+
+function updateItem(idx, field, value) {
+  if (field === 'biaya') value = parseFloat(value) || 0;
+  state.items[idx][field] = value;
+  updateTotal();
+  updateItemBadge();
+
+  // Re-render hanya input yang berubah untuk avoid re-focus
+  const inputs = document.querySelectorAll(`#itemRows .item-row`)[idx]?.querySelectorAll('input, select');
+  if (inputs) {
+    // Update error state on biaya
+    if (field === 'biaya') {
+      inputs[2]?.classList.toggle('error', value <= 0);
+    }
+    if (field === 'nama') {
+      inputs[0]?.classList.toggle('error', !value.trim());
+      showAutocomplete(idx, value);
+    }
+  }
+}
+
+function showAutocomplete(idx, query) {
+  const box = document.getElementById(`autocomplete_${idx}`);
+  if (!box) return;
+  if (!query || query.length < 2) { box.classList.add('hidden'); return; }
+
+  // Suggestions dari Jadwal Servis + nama item sebelumnya yang pernah dipakai
+  const suggestions = [
+    'Oli mesin', 'Filter oli', 'Busi', 'Filter udara', 'Servis CVT',
+    'Oli gardan', 'V-belt', 'Kampas rem', 'Ban depan', 'Ban belakang',
+    'Air radiator', 'Minyak rem', 'Roller CVT', 'Servis ringan',
+    'Jasa servis', 'Oli shockbreaker'
+  ].filter(s => s.toLowerCase().includes(query.toLowerCase()) && s.toLowerCase() !== query.toLowerCase());
+
+  if (suggestions.length === 0) { box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  box.innerHTML = suggestions.slice(0, 5).map(s => `
+    <div onclick="pickAutocomplete(${idx}, '${escapeHtml(s)}')"
+      class="px-3 py-2 text-sm cursor-pointer hover:bg-orange-50 hover:text-orange-600 border-b border-gray-50 last:border-0">
+      ${s}
+    </div>
+  `).join('');
+}
+
+function pickAutocomplete(idx, val) {
+  state.items[idx].nama = val;
+  const box = document.getElementById(`autocomplete_${idx}`);
+  box?.classList.add('hidden');
+  renderItems();
+}
+
+function checkAutocomplete(idx, val) {
+  setTimeout(() => {
+    const box = document.getElementById(`autocomplete_${idx}`);
+    box?.classList.add('hidden');
+  }, 200);
+}
+
+function hapusItem(idx) {
+  if (state.items.length <= 1) {
+    showToast('Minimal 1 item servis', 'error');
+    return;
+  }
+  state.items.splice(idx, 1);
+  renderItems();
+}
+
+function tambahItem() {
+  const newItem = createEmptyItem();
+  // Cek duplikat nama (yang sudah terisi)
+  const filledNames = state.items.filter(i => i.nama.trim()).map(i => i.nama.toLowerCase());
+  if (newItem.nama && filledNames.includes(newItem.nama.toLowerCase())) {
+    pendingDuplikat = newItem;
+    document.getElementById('duplikatText').textContent = `"${newItem.nama}" sudah ada. Tetap tambahkan?`;
+    document.getElementById('modalDuplikat').classList.remove('hidden');
+    return;
+  }
+  state.items.push(newItem);
+  renderItems();
+  // Scroll ke bawah
+  setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
+}
+
+let pendingDuplikat = null;
+function confirmDuplikat() {
+  if (pendingDuplikat) { state.items.push(pendingDuplikat); pendingDuplikat = null; renderItems(); }
+  closeDuplikat();
+}
+function closeDuplikat() { document.getElementById('modalDuplikat').classList.add('hidden'); }
+
+function updateTotal() {
+  const total = state.items.reduce((sum, i) => sum + (parseFloat(i.biaya) || 0), 0);
+  document.getElementById('totalDisplay').textContent = formatRupiah(total);
+  // Progress bar — max reference 500rb
+  const pct = Math.min((total / 500000) * 100, 100);
+  document.getElementById('biayaProgressFill').style.width = pct + '%';
+}
+
+function updateItemBadge() {
+  const n = state.items.filter(i => i.nama.trim() && i.biaya > 0).length;
+  const badge = document.getElementById('itemCountBadge');
+  badge.textContent = `${n} item`;
+  badge.className = `badge ${n === 0 ? 'badge-warning' : 'badge-ok'}`;
+}
+
+// ============================================================
+// KM VALIDATION
+// ============================================================
+function onKmInput() {
+  const val = parseInt(document.getElementById('inputKm').value);
+  const errEl = document.getElementById('kmError');
+  const input = document.getElementById('inputKm');
+  const kmTerakhir = state.selectedKendaraan?.km_terakhir || 0;
+
+  if (!val || isNaN(val)) {
+    errEl.textContent = ''; errEl.classList.add('hidden');
+    input.classList.remove('error');
+    state.kmOk = false; return;
+  }
+  if (val < kmTerakhir) {
+    errEl.textContent = `Error: KM tidak valid. KM sebelumnya: ${kmTerakhir.toLocaleString('id-ID')} km`;
+    errEl.classList.remove('hidden');
+    input.classList.add('error');
+    state.kmOk = false; return;
+  }
+  errEl.classList.add('hidden');
+  input.classList.remove('error');
+
+  // Odometer warning: selisih > 20% dari km_terakhir (atau > 5000 km)
+  const selisih = val - kmTerakhir;
+  const threshold = Math.max(kmTerakhir * 0.2, 5000);
+  if (selisih > threshold && kmTerakhir > 0) {
+    // Will show warning on save
+    state.kmWarningNeeded = true;
+    state.kmSelisih = selisih;
+  } else {
+    state.kmWarningNeeded = false;
+  }
+  state.kmOk = true;
+}
+
+function validateTanggal() {
+  const val = document.getElementById('inputTanggal').value;
+  const errEl = document.getElementById('tanggalError');
+  const input = document.getElementById('inputTanggal');
+
+  if (!val) { state.tanggalOk = false; return; }
+  const selected = new Date(val);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const maxDate = new Date(); maxDate.setDate(today.getDate() + 7);
+
+  if (selected > maxDate) {
+    errEl.textContent = 'Error: Tanggal tidak valid (max 7 hari ke depan)';
+    errEl.classList.remove('hidden');
+    input.classList.add('error');
+    state.tanggalOk = false; return;
+  }
+  errEl.classList.add('hidden');
+  input.classList.remove('error');
+  state.tanggalOk = true;
+}
+
+// ============================================================
+// STEP NAVIGATION
+// ============================================================
+function goToStep1() {
+  setStep(1);
+}
+
+function goToStep2() {
+  // Validasi step 1
+  if (!state.selectedUser) { showToast('Pilih nama kamu dulu ya', 'error'); return; }
+  if (!state.selectedKendaraan) { showToast('Pilih kendaraan dulu', 'error'); return; }
+  setStep(2);
+  renderStep2();
+}
+
+function goToStep3() {
+  if (!state.selectedTemplate) { showToast('Pilih jenis servis dulu', 'error'); return; }
+  setStep(3);
+  renderStep3();
+}
+
+function setStep(n) {
+  state.currentStep = n;
+  document.getElementById('step1').classList.toggle('hidden', n !== 1);
+  document.getElementById('step2').classList.toggle('hidden', n !== 2);
+  document.getElementById('step3').classList.toggle('hidden', n !== 3);
+
+  // Update step dots
+  document.querySelectorAll('.step-dot').forEach(dot => {
+    const s = parseInt(dot.dataset.step);
+    dot.style.background = s <= n ? '#FB923C' : 'rgba(255,255,255,0.2)';
+    dot.style.width = s === n ? '24px' : '8px';
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+// COLLAPSIBLE CATATAN
+// ============================================================
+function toggleCatatan() {
+  const content = document.getElementById('catatanContent');
+  const chevron = document.getElementById('catatanChevron');
+  content.classList.toggle('open');
+  chevron.style.transform = content.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+function onFollowupChange() {
+  const checked = document.getElementById('toggleFollowup').checked;
+  document.getElementById('catatanFollowupBox').classList.toggle('hidden', !checked);
+}
+
+// ============================================================
+// ODOMETER WARNING MODAL
+// ============================================================
+function showOdoWarning(selisih, callback) {
+  document.getElementById('odoWarningText').innerHTML =
+    `KM naik sekitar <b>${selisih.toLocaleString('id-ID')} km</b> dari terakhir tercatat. Apakah ini benar?`;
+  state.odoWarningCallback = callback;
+  document.getElementById('modalOdometer').classList.remove('hidden');
+}
+
+function dismissOdoWarning() {
+  document.getElementById('modalOdometer').classList.add('hidden');
+  state.odoWarningCallback = null;
+  document.getElementById('inputKm').focus();
+}
+
+function confirmOdoWarning() {
+  document.getElementById('modalOdometer').classList.add('hidden');
+  if (state.odoWarningCallback) {
+    state.odoWarningCallback();
+    state.odoWarningCallback = null;
+  }
+}
+
+// ============================================================
+// SIMPAN SERVIS
+// ============================================================
+async function simpanServis() {
+  // ---- Validasi ----
+  const km = parseInt(document.getElementById('inputKm').value);
+  const tanggal = document.getElementById('inputTanggal').value;
+  const bengkelId = document.getElementById('selectBengkel').value;
+  const followup = document.getElementById('toggleFollowup').checked;
+  const catatanFollowup = document.getElementById('inputCatatanFollowup').value.trim();
+  const catatan = document.getElementById('inputCatatan').value.trim();
+
+  if (!km || !state.kmOk) { showToast('KM servis belum valid', 'error'); document.getElementById('inputKm').focus(); return; }
+  if (!tanggal || !state.tanggalOk) { showToast('Tanggal servis belum valid', 'error'); return; }
+  if (!bengkelId) { showToast('Pilih bengkel dulu', 'error'); document.getElementById('selectBengkel').focus(); return; }
+
+  const validItems = state.items.filter(i => i.nama.trim());
+  if (validItems.length === 0) { showToast('Tambahkan minimal 1 item servis', 'error'); return; }
+
+  const itemsWithBiaya0 = validItems.filter(i => !i.biaya || i.biaya <= 0);
+  if (itemsWithBiaya0.length > 0) { showToast(`Biaya "${itemsWithBiaya0[0].nama}" harus lebih dari 0`, 'error'); return; }
+
+  // Odometer warning
+  if (state.kmWarningNeeded) {
+    showOdoWarning(state.kmSelisih, () => prosesSimapan({ km, tanggal, bengkelId, followup, catatanFollowup, catatan, validItems }));
+    return;
+  }
+
+  prosesSimapan({ km, tanggal, bengkelId, followup, catatanFollowup, catatan, validItems });
+}
+
+async function prosesSimapan({ km, tanggal, bengkelId, followup, catatanFollowup, catatan, validItems }) {
+  // Show loading
+  document.getElementById('btnSimpanText').classList.add('hidden');
+  document.getElementById('btnSimpanLoader').classList.remove('hidden');
+  document.getElementById('btnSimpan').disabled = true;
+
+  const payload = {
+    action: 'simpanServis',
+    plat_nomor: state.selectedKendaraan.plat_nomor,
+    input_oleh: state.selectedUser.id_user,
+    nama_input_oleh: state.selectedUser.nama_user,
+    tanggal_servis: tanggal,
+    km_servis: km,
+    id_bengkel: bengkelId,
+    perlu_followup: followup ? 'Ya' : 'Tidak',
+    catatan_followup: catatanFollowup,
+    catatan: catatan,
+    items: JSON.stringify(validItems.map(i => ({
+      nama_item: i.nama,
+      id_part: i.id_part || '',
+      tipe_input: i.tipe_input || 'Manual',
+      kategori_servis: 'Rutin',
+      kategori_biaya: i.kategori_biaya,
+      biaya: i.biaya,
+    }))),
+    total_biaya: validItems.reduce((s, i) => s + (i.biaya || 0), 0),
+  };
+
+  try {
+    if (APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Gagal menyimpan');
+    } else {
+      // Mock: simulate delay
+      await new Promise(r => setTimeout(r, 1200));
+    }
+
+    // ---- SUCCESS ----
+    const totalBiaya = validItems.reduce((s, i) => s + (i.biaya || 0), 0);
+    document.getElementById('successDetail').textContent =
+      `${state.selectedKendaraan.merk} ${state.selectedKendaraan.model} — ${validItems.length} item — ${formatRupiah(totalBiaya)}`;
+    document.getElementById('modalSuccess').classList.remove('hidden');
+
+  } catch(e) {
+    showToast('Gagal simpan: ' + e.message, 'error');
+  } finally {
+    document.getElementById('btnSimpanText').classList.remove('hidden');
+    document.getElementById('btnSimpanLoader').classList.add('hidden');
+    document.getElementById('btnSimpan').disabled = false;
+  }
+}
+
+function closeSuccess() {
+  document.getElementById('modalSuccess').classList.add('hidden');
+  // Navigate to dashboard (replace with actual nav)
+  navTo('home');
+}
+
+function resetForm() {
+  document.getElementById('modalSuccess').classList.add('hidden');
+  state.selectedKendaraan = null;
+  state.selectedTemplate = null;
+  state.items = [];
+  state.kmOk = false;
+  state.tanggalOk = false;
+  state.kmWarningNeeded = false;
+  document.getElementById('inputKm').value = '';
+  document.getElementById('selectBengkel').value = '';
+  document.getElementById('toggleFollowup').checked = false;
+  document.getElementById('catatanFollowupBox').classList.add('hidden');
+  document.getElementById('inputCatatanFollowup').value = '';
+  document.getElementById('inputCatatan').value = '';
+  document.getElementById('catatanContent').classList.remove('open');
+  setStep(1);
+  renderStep1();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navTo(page) {
+  // Hook ke routing aplikasi kamu
+  // window.location.href = `/${page}.html`;
+  showToast(`Navigasi ke: ${page}`, '');
+}
+
+function showFullFormHint() {
+  showToast('Full Form ada di bawah tombol Catat Servis di menu Servis 🙂', '');
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function formatRupiah(n) {
+  return 'Rp ' + Math.floor(n || 0).toLocaleString('id-ID');
+}
+
+function escapeHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// Close modals on overlay click
+document.getElementById('modalOdometer').addEventListener('click', function(e) {
+  if (e.target === this) dismissOdoWarning();
+});
+
+// ============================================================
+// BOOT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  setStep(1);
+  fetchAll();
+});
+</script>
+</body>
+</html>

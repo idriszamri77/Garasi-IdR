@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Garasi IdR — Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/locale/id.min.js"></script>
+<style>
+  /* ── RESET & BASE ───────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --orange:   #F05E0E;
+    --orange-lt:#FFF0E8;
+    --navy:     #0F1F4B;
+    --navy-lt:  #1A3166;
+    --white:    #FFFFFF;
+    --bg:       #F8FAFC;
+    --border:   #E2E8F0;
+    --text:     #1E293B;
+    --text-sm:  #64748B;
+
+    --green:    #22C55E;
+    --yellow:   #F59E0B;
+    --red:      #EF4444;
+    --blue:     #3B82F6;
+    --gray:     #9CA3AF;
+    --folup:    #F97316;
+
+    --nav-h:    64px;
+    --header-h: 56px;
+    --radius:   12px;
+    --radius-sm:8px;
+
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── LAYOUT ─────────────────────────────────────────── */
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    background: var(--bg);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ─────────────────────────────────────────── */
+  .header {
+    height: var(--header-h);
+    background: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(15,31,75,.35);
+  }
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-logo .icon {
+    width: 28px; height: 28px;
+    background: var(--orange);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .header-logo .name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -.3px;
+  }
+  .header-logo .name span { color: var(--orange); }
+  .header-right {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .user-chip {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: #fff;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+    transition: background .2s;
+  }
+  .user-chip:hover { background: rgba(255,255,255,.2); }
+  .user-chip .dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+  }
+
+  /* ── SCROLL AREA ─────────────────────────────────────── */
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: calc(var(--nav-h) + 16px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── SECTION LABEL ───────────────────────────────────── */
+  .section-label {
+    padding: 16px 16px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sm);
+    letter-spacing: .8px;
+    text-transform: uppercase;
+  }
+
+  /* ── ALERT CARDS (4 kartu pengingat) ────────────────── */
+  .alert-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 8px 16px 0;
+  }
+  .alert-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 14px;
+    border: 1.5px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .alert-card:active { transform: scale(.97); }
+  .alert-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+  .alert-card.red::before   { background: var(--red); }
+  .alert-card.yellow::before{ background: var(--yellow); }
+  .alert-card.blue::before  { background: var(--blue); }
+  .alert-card.orange::before{ background: var(--orange); }
+
+  .alert-card .ac-icon {
+    font-size: 22px;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .alert-card .ac-num {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text);
+  }
+  .alert-card.red    .ac-num { color: var(--red); }
+  .alert-card.yellow .ac-num { color: var(--yellow); }
+  .alert-card.blue   .ac-num { color: var(--blue); }
+  .alert-card.orange .ac-num { color: var(--orange); }
+
+  .alert-card .ac-label {
+    font-size: 11px;
+    color: var(--text-sm);
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  /* ── VEHICLE CARDS ───────────────────────────────────── */
+  .vehicle-list {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .vcard {
+    background: var(--navy);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(15,31,75,.25);
+  }
+  .vcard::after {
+    content: '';
+    position: absolute;
+    right: -20px; top: -20px;
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,.04);
+    border-radius: 50%;
+  }
+  .vcard-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .vcard-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .vcard-plate {
+    font-size: 11px;
+    color: rgba(255,255,255,.55);
+    margin-top: 2px;
+  }
+  .vcard-status-badge {
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-red    { background: rgba(239,68,68,.2);   color: #FCA5A5; }
+  .badge-yellow { background: rgba(245,158,11,.2);  color: #FDE68A; }
+  .badge-green  { background: rgba(34,197,94,.2);   color: #86EFAC; }
+  .badge-blue   { background: rgba(59,130,246,.2);  color: #93C5FD; }
+
+  .vcard-km-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .vcard-km {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .vcard-km-label {
+    font-size: 12px;
+    color: rgba(255,255,255,.5);
+    margin-top: 3px;
+  }
+  .vcard-km-updated {
+    font-size: 11px;
+    color: rgba(255,255,255,.4);
+    margin-left: auto;
+  }
+
+  /* alert items inside card */
+  .vcard-alerts {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .vcard-alert-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+  }
+  .vcard-alert-item .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-red    { background: var(--red); }
+  .dot-yellow { background: var(--yellow); }
+  .dot-blue   { background: var(--blue); }
+
+  .vcard-alert-item .part-name { color: rgba(255,255,255,.75); flex: 1; }
+  .vcard-alert-item .part-status {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 10px;
+  }
+  .ps-red    { background: rgba(239,68,68,.25);  color: #FCA5A5; }
+  .ps-yellow { background: rgba(245,158,11,.25); color: #FDE68A; }
+  .ps-blue   { background: rgba(59,130,246,.25); color: #93C5FD; }
+
+  .vcard-footer {
+    display: flex;
+    gap: 8px;
+  }
+  .btn-updatekm {
+    flex: 1;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    height: 38px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: background .2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-updatekm:hover { background: rgba(255,255,255,.17); }
+  .btn-updatekm:active { background: rgba(255,255,255,.25); }
+
+  .btn-catat {
+    flex: 2;
+    background: var(--orange);
+    border: none;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    height: 38px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: background .2s, transform .1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-catat:hover { background: #D94F08; }
+  .btn-catat:active { transform: scale(.97); }
+
+  /* ── FOLLOWUP SECTION ────────────────────────────────── */
+  .followup-list {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .followup-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-left: 4px solid var(--folup);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .followup-card .fup-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .followup-card .fup-body { flex: 1; }
+  .followup-card .fup-vehicle {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .followup-card .fup-note {
+    font-size: 12px;
+    color: var(--text-sm);
+    line-height: 1.4;
+  }
+  .followup-card .fup-date {
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 4px;
+  }
+
+  /* ── RENCANA SERVIS ──────────────────────────────────── */
+  .rencana-list {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .rencana-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .rencana-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    background: #F1F5F9;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    justify-content: space-between;
+  }
+  .rencana-header .rh-left { display: flex; align-items: center; gap: 8px; }
+  .rencana-header .chev {
+    font-size: 12px;
+    color: var(--text-sm);
+    transition: transform .2s;
+  }
+  .rencana-card.open .chev { transform: rotate(180deg); }
+
+  .rencana-body { display: none; padding: 0 14px 10px; }
+  .rencana-card.open .rencana-body { display: block; }
+
+  .rencana-group {
+    margin-top: 8px;
+  }
+  .rencana-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: var(--text-sm);
+    margin-bottom: 5px;
+  }
+  .rencana-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .rencana-item:last-child { border-bottom: none; }
+  .rencana-item .ri-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .rencana-item .ri-name { font-size: 12px; color: var(--text); flex: 1; }
+  .rencana-item .ri-info { font-size: 11px; color: var(--text-sm); }
+
+  /* ── BOTTOM NAV ──────────────────────────────────────── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    height: var(--nav-h);
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: stretch;
+    z-index: 200;
+    box-shadow: 0 -2px 12px rgba(0,0,0,.06);
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .15s;
+  }
+  .nav-item:active { opacity: .7; }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-label { font-size: 10px; font-weight: 500; }
+
+  .nav-item[data-tab="home"]     .nav-icon,
+  .nav-item[data-tab="home"]     .nav-label { color: #E8622A; }
+  .nav-item[data-tab="servis"]   .nav-icon,
+  .nav-item[data-tab="servis"]   .nav-label { color: #B0B8C8; }
+  .nav-item[data-tab="cari"]     .nav-icon,
+  .nav-item[data-tab="cari"]     .nav-label { color: #B0B8C8; }
+  .nav-item[data-tab="laporan"]  .nav-icon,
+  .nav-item[data-tab="laporan"]  .nav-label { color: #B0B8C8; }
+  .nav-item[data-tab="admin"]    .nav-icon,
+  .nav-item[data-tab="admin"]    .nav-label { color: #B0B8C8; }
+
+  .nav-item.active[data-tab="home"]    .nav-icon,
+  .nav-item.active[data-tab="home"]    .nav-label { color: #E8622A; }
+  .nav-item.active[data-tab="servis"]  .nav-icon,
+  .nav-item.active[data-tab="servis"]  .nav-label { color: #4A90D9; }
+  .nav-item.active[data-tab="cari"]    .nav-icon,
+  .nav-item.active[data-tab="cari"]    .nav-label { color: #7C6FCD; }
+  .nav-item.active[data-tab="laporan"] .nav-icon,
+  .nav-item.active[data-tab="laporan"] .nav-label { color: #3DAA72; }
+  .nav-item.active[data-tab="admin"]   .nav-icon,
+  .nav-item.active[data-tab="admin"]   .nav-label { color: #888EA8; }
+
+  /* ── UPDATE KM POPUP ─────────────────────────────────── */
+  .popup-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 300;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .popup-overlay.open { display: flex; }
+  .popup-sheet {
+    background: var(--white);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 32px;
+    width: 100%;
+    max-width: 430px;
+    animation: slideUp .25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+  .popup-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .popup-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .popup-subtitle {
+    font-size: 12px;
+    color: var(--text-sm);
+    margin-bottom: 16px;
+  }
+  .popup-current-km {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--text-sm);
+  }
+  .popup-current-km strong {
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 700;
+    display: block;
+  }
+  .km-input-wrap {
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .km-input-wrap input {
+    width: 100%;
+    height: 52px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 60px 0 14px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    background: #fff;
+    outline: none;
+    transition: border-color .2s;
+    -webkit-appearance: none;
+  }
+  .km-input-wrap input:focus { border-color: var(--orange); }
+  .km-input-wrap .km-suffix {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: var(--text-sm);
+    font-weight: 500;
+  }
+  .km-error {
+    font-size: 12px;
+    color: var(--red);
+    margin-bottom: 12px;
+    display: none;
+  }
+  .km-error.show { display: block; }
+  .popup-actions {
+    display: flex; gap: 10px;
+    margin-top: 16px;
+  }
+  .btn-cancel {
+    flex: 1;
+    height: 48px;
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .btn-save {
+    flex: 2;
+    height: 48px;
+    background: var(--orange);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-save:hover { background: #D94F08; }
+  .btn-save:disabled { background: var(--gray); cursor: not-allowed; }
+
+  /* ── USER PICKER POPUP ───────────────────────────────── */
+  .user-popup {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 400;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .user-popup.open { display: flex; }
+  .user-sheet {
+    background: var(--white);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 36px;
+    width: 100%;
+    max-width: 430px;
+    animation: slideUp .25s ease;
+  }
+  .user-sheet-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .user-sheet-sub {
+    font-size: 12px;
+    color: var(--text-sm);
+    margin-bottom: 16px;
+  }
+  .user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .user-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .user-option:hover { border-color: var(--orange); background: var(--orange-lt); }
+  .user-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .user-info .u-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .user-info .u-role { font-size: 11px; color: var(--text-sm); }
+
+  /* ── SKELETON LOADER ─────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+  }
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── LOADING STATE ───────────────────────────────────── */
+  .loading-overlay {
+    position: fixed; inset: 0;
+    background: var(--navy);
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    transition: opacity .4s;
+  }
+  .loading-overlay.done { opacity: 0; pointer-events: none; }
+  .loading-logo { font-size: 48px; }
+  .loading-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .loading-name span { color: var(--orange); }
+  .loading-sub { font-size: 13px; color: rgba(255,255,255,.5); }
+  .loading-spinner {
+    width: 32px; height: 32px;
+    border: 3px solid rgba(255,255,255,.2);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TOAST ───────────────────────────────────────────── */
+  .toast {
+    position: fixed;
+    bottom: calc(var(--nav-h) + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1E293B;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity .25s, transform .25s;
+    z-index: 500;
+    white-space: nowrap;
+    max-width: 90%;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── EMPTY STATE ─────────────────────────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--text-sm);
+    font-size: 13px;
+  }
+  .empty-state .e-icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* ── RESPONSIVE ──────────────────────────────────────── */
+  @media (min-width: 431px) {
+    .bottom-nav { left: 50%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-logo">🚗</div>
+  <div class="loading-name">Garasi <span>IdR</span></div>
+  <div class="loading-sub">Memuat data kendaraan...</div>
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- APP SHELL -->
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="icon">🔧</div>
+      <div class="name">Garasi <span>IdR</span></div>
+    </div>
+    <div class="header-right">
+      <div class="user-chip" id="userChip" onclick="openUserPicker()">
+        <div class="dot"></div>
+        <span id="activeUserName">Pilih User</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SCROLL AREA -->
+  <div class="scroll-area" id="scrollArea">
+
+    <!-- 4 KARTU PENGINGAT -->
+    <div class="section-label">Pengingat</div>
+    <div class="alert-grid" id="alertGrid">
+      <div class="alert-card red" onclick="filterAlerts('terlambat')">
+        <span class="ac-icon">🔴</span>
+        <div class="ac-num" id="cntTerlambat">0</div>
+        <div class="ac-label">Terlambat servis</div>
+      </div>
+      <div class="alert-card yellow" onclick="filterAlerts('segera')">
+        <span class="ac-icon">⚠️</span>
+        <div class="ac-num" id="cntSegera">0</div>
+        <div class="ac-label">Segera servis</div>
+      </div>
+      <div class="alert-card blue" onclick="filterAlerts('cek')">
+        <span class="ac-icon">👁️</span>
+        <div class="ac-num" id="cntCek">0</div>
+        <div class="ac-label">Perlu cek kondisi</div>
+      </div>
+      <div class="alert-card orange">
+        <span class="ac-icon">💰</span>
+        <div class="ac-num" id="totalBiaya">0</div>
+        <div class="ac-label">Total biaya bulan ini</div>
+      </div>
+    </div>
+
+    <!-- KARTU KENDARAAN -->
+    <div class="section-label">Kendaraan</div>
+    <div class="vehicle-list" id="vehicleList">
+      <!-- filled by JS -->
+    </div>
+
+    <!-- CATATAN BENGKEL (followup) -->
+    <div id="followupSection" style="display:none;">
+      <div class="section-label">📌 Catatan Bengkel</div>
+      <div class="followup-list" id="followupList"></div>
+    </div>
+
+    <!-- RENCANA SERVIS -->
+    <div class="section-label">Rencana Servis Berikutnya</div>
+    <div class="rencana-list" id="rencanaList"></div>
+
+  </div><!-- /scroll-area -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" data-tab="home">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" data-tab="servis" onclick="window.location.href='quickservice'">
+      <div class="nav-icon">🔧</div>
+      <div class="nav-label">Servis</div>
+    </div>
+    <div class="nav-item" data-tab="cari" onclick="window.location.href='searchlaporan'">
+      <div class="nav-icon">🔍</div>
+      <div class="nav-label">Cari</div>
+    </div>
+    <div class="nav-item" data-tab="laporan" onclick="window.location.href='searchlaporan'">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">Laporan</div>
+    </div>
+    <div class="nav-item" data-tab="admin" onclick="window.location.href='admin'">
+      <div class="nav-icon">⚙️</div>
+      <div class="nav-label">Admin</div>
+    </div>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- UPDATE KM POPUP -->
+<div class="popup-overlay" id="kmPopup">
+  <div class="popup-sheet">
+    <div class="popup-handle"></div>
+    <div class="popup-title" id="kmPopupTitle">Update KM</div>
+    <div class="popup-subtitle" id="kmPopupSub">Masukkan KM odometer saat ini</div>
+    <div class="popup-current-km">
+      KM Terakhir Tercatat
+      <strong id="kmPopupCurrent">0 km</strong>
+    </div>
+    <div class="km-input-wrap">
+      <input type="number" id="kmInput" placeholder="contoh: 12500" inputmode="numeric" min="0">
+      <span class="km-suffix">km</span>
+    </div>
+    <div class="km-error" id="kmError">⚠️ KM tidak boleh lebih kecil dari KM tercatat</div>
+    <div id="kmOdoWarn" style="font-size:12px;color:var(--yellow);margin-bottom:4px;display:none;">
+      ⚠️ KM naik banyak. Pastikan angka sudah benar.
+    </div>
+    <div class="popup-actions">
+      <button class="btn-cancel" onclick="closeKmPopup()">Batal</button>
+      <button class="btn-save" id="kmSaveBtn" onclick="saveKm()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER PICKER POPUP -->
+<div class="user-popup" id="userPopup">
+  <div class="user-sheet">
+    <div class="popup-handle"></div>
+    <div class="user-sheet-title">Siapa kamu?</div>
+    <div class="user-sheet-sub">Pilih nama sebelum melakukan aksi</div>
+    <div class="user-list" id="userList"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────
+// Ganti dengan URL Apps Script Web App setelah deploy Tahap 2
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyc-9p2v_OwoMvbDoIIPXO5rOIeJv_WaY2iJeGiB_aHgatogwohiTBVhzDzHDNOay1glg/exec';
+
+// Mode demo: true = pakai data dummy, false = fetch dari Apps Script
+const DEMO_MODE = false;
+
+// ── STATE ────────────────────────────────────────────────────────────
+let state = {
+  activeUser: null,       // { id_user, nama_user, role }
+  kendaraan: [],
+  pengingat: {},          // { plat: [{ nama_part, status, sisa_km, sisa_hari }] }
+  histori: [],            // recent servis
+  followup: [],           // kendaraan dengan perlu_followup=Ya
+  kmEditTarget: null,     // { plat, km_terakhir, merk, model }
+};
+
+// ── DEMO DATA ────────────────────────────────────────────────────────
+const demoData = {
+  users: [
+    { id_user: 'U001', nama_user: 'Ayah', role: 'Admin', status: 'Aktif' },
+    { id_user: 'U002', nama_user: 'Bunda', role: 'Anggota', status: 'Aktif' },
+    { id_user: 'U003', nama_user: 'Kak Reza', role: 'Anggota', status: 'Aktif' },
+  ],
+  kendaraan: [
+    {
+      plat_nomor: 'L 1234 AB',
+      merk: 'Honda', model: 'PCX 160', tahun: 2022,
+      pemilik: 'Ayah', km_terakhir: 14800,
+      tgl_update_km: '2025-05-10', status: 'Aktif',
+    },
+    {
+      plat_nomor: 'L 5678 CD',
+      merk: 'Yamaha', model: 'Gear 125', tahun: 2021,
+      pemilik: 'Bunda', km_terakhir: 9200,
+      tgl_update_km: '2025-05-08', status: 'Aktif',
+    },
+    {
+      plat_nomor: 'L 9999 EF',
+      merk: 'Honda', model: 'Jazz', tahun: 2019,
+      pemilik: 'Keluarga', km_terakhir: 62500,
+      tgl_update_km: '2025-05-12', status: 'Aktif',
+    },
+  ],
+  pengingat: {
+    'L 1234 AB': [
+      { nama_part: 'Oli mesin', status: 'Terlambat', sisa_km: -800, sisa_hari: -12 },
+      { nama_part: 'Servis ringan', status: 'Terlambat', sisa_km: -800, sisa_hari: -12 },
+      { nama_part: 'Oli gardan', status: 'Segera', sisa_km: 1200, sisa_hari: 18 },
+      { nama_part: 'Busi', status: 'Aman', sisa_km: 5200, sisa_hari: 120 },
+      { nama_part: 'Ban depan/belakang', status: 'Cek Kondisi', sisa_km: null, sisa_hari: null },
+    ],
+    'L 5678 CD': [
+      { nama_part: 'Oli mesin', status: 'Segera', sisa_km: 150, sisa_hari: 5 },
+      { nama_part: 'Servis ringan', status: 'Segera', sisa_km: 150, sisa_hari: 5 },
+      { nama_part: 'Busi', status: 'Aman', sisa_km: 2800, sisa_hari: 90 },
+      { nama_part: 'Kampas rem', status: 'Cek Kondisi', sisa_km: null, sisa_hari: null },
+    ],
+    'L 9999 EF': [
+      { nama_part: 'Oli mesin', status: 'Aman', sisa_km: 2500, sisa_hari: 45 },
+      { nama_part: 'Filter oli', status: 'Aman', sisa_km: 2500, sisa_hari: 45 },
+      { nama_part: 'Filter udara', status: 'Terlambat', sisa_km: -2000, sisa_hari: -30 },
+      { nama_part: 'Minyak rem', status: 'Segera', sisa_km: 500, sisa_hari: 20 },
+      { nama_part: 'Ban depan/belakang', status: 'Cek Kondisi', sisa_km: null, sisa_hari: null },
+    ],
+  },
+  followup: [
+    {
+      plat_nomor: 'L 1234 AB',
+      label: 'Honda PCX 160',
+      catatan_followup: 'Kampas rem mulai tipis — cek saat servis berikutnya',
+      tanggal_servis: '2025-04-20',
+    },
+    {
+      plat_nomor: 'L 9999 EF',
+      label: 'Honda Jazz',
+      catatan_followup: 'Bunyi bearing roda kanan saat belok — perlu diperiksa',
+      tanggal_servis: '2025-05-02',
+    },
+  ],
+  biayaBulan: 485000,
+};
+
+// ── INIT ─────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Cek session user tersimpan
+  const savedUser = sessionStorage.getItem('garasi_user');
+  if (savedUser) {
+    state.activeUser = JSON.parse(savedUser);
+    document.getElementById('activeUserName').textContent = state.activeUser.nama_user;
+  }
+
+  if (DEMO_MODE) {
+    setTimeout(() => {
+      loadDemoData();
+      hideLoading();
+    }, 1200);
+  } else {
+    fetchDashboard();
+  }
+});
+
+function loadDemoData() {
+  state.kendaraan   = demoData.kendaraan;
+  state.pengingat   = demoData.pengingat;
+  state.followup    = demoData.followup;
+  renderDashboard();
+}
+
+// ── FETCH (production mode) ──────────────────────────────────────────
+async function fetchDashboard() {
+  try {
+   
+const res = await fetch(`${SCRIPT_URL}?action=getDashboard`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'Gagal load data');
+
+    const d = data.data || {};
+state.kendaraan  = d.kendaraan  || [];
+const pengingatMap = {};
+(d.kendaraan || []).forEach(k => {
+  if (k.pengingat) {
+    pengingatMap[k.plat_nomor] = k.pengingat.map(p => ({
+      nama_part: p.nama_part,
+      status: p.status,
+      sisa_km: p.km_berikutnya ? p.km_berikutnya - k.km_terakhir : null,
+      sisa_hari: null
+    }));
+  }
+});
+state.pengingat = pengingatMap;
+state.followup   = d.followup   || [];
+state.biayaBulan = d.biayaBulan || 0;
+if (d.kartu) {
+  document.getElementById('cntTerlambat').textContent = d.kartu.terlambat_servis || 0;
+  document.getElementById('cntSegera').textContent = d.kartu.segera_servis || 0;
+  document.getElementById('cntCek').textContent = d.kartu.cek_kondisi || 0;
+  document.getElementById('totalBiaya').textContent = formatRp(d.kartu.total_biaya_bulan || 0);
+}
+    renderDashboard();
+    hideLoading();
+  } catch (err) {
+    console.error(err);
+    showToast('Gagal memuat data. Coba lagi.');
+    hideLoading();
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────
+function renderDashboard() {
+  renderAlertCards();
+  renderVehicleCards();
+  renderFollowup();
+  renderRencana();
+}
+
+function renderAlertCards() {
+  let terlambat = 0, segera = 0, cek = 0;
+
+  Object.values(state.pengingat).forEach(items => {
+    items.forEach(it => {
+      if (it.status === 'Terlambat')    terlambat++;
+      else if (it.status === 'Segera')  segera++;
+      else if (it.status === 'Cek Kondisi') cek++;
+    });
+  });
+
+  document.getElementById('cntTerlambat').textContent = terlambat;
+  document.getElementById('cntSegera').textContent    = segera;
+  document.getElementById('cntCek').textContent       = cek;
+
+  const biaya = DEMO_MODE ? demoData.biayaBulan : (state.biayaBulan || 0);
+  document.getElementById('totalBiaya').textContent = formatRp(biaya);
+}
+
+function renderVehicleCards() {
+  const container = document.getElementById('vehicleList');
+  if (!state.kendaraan.length) {
+    container.innerHTML = '<div class="empty-state"><div class="e-icon">🚗</div>Belum ada kendaraan terdaftar</div>';
+    return;
+  }
+
+  container.innerHTML = state.kendaraan.map(v => {
+    const pengingatList = state.pengingat[v.plat_nomor] || [];
+    const worst = getWorstStatus(pengingatList);
+    const badge = statusBadge(worst);
+
+    // Top 3 alert items (terlambat/segera dulu)
+    const alertItems = pengingatList
+      .filter(it => it.status === 'Terlambat' || it.status === 'Segera' || it.status === 'Cek Kondisi')
+      .slice(0, 3);
+
+    return `
+    <div class="vcard">
+      <div class="vcard-top">
+        <div>
+          <div class="vcard-name">${v.merk} ${v.model}</div>
+         <div class="vcard-plate">${v.plat_nomor} • ${v.tahun||''} • ${v.pemilik}</div>
+        </div>
+        <div class="vcard-status-badge ${badge.cls}">${badge.label}</div>
+      </div>
+      <div class="vcard-km-row">
+        <div>
+          <div class="vcard-km">${v.km_terakhir.toLocaleString('id-ID')} km</div>
+          <div class="vcard-km-label">KM Terakhir</div>
+        </div>
+        <div class="vcard-km-updated">Update: ${formatDate(v.tgl_update_km)}</div>
+      </div>
+      ${alertItems.length ? `
+      <div class="vcard-alerts">
+        ${alertItems.map(it => alertItemHTML(it)).join('')}
+      </div>` : ''}
+      <div class="vcard-footer">
+        <button class="btn-updatekm" onclick="openKmPopup(${JSON.stringify(v).split('"').join('&quot;')})">
+          📍 Update KM
+        </button>
+        <button class="btn-catat" onclick="goToServis('${v.plat_nomor}')">
+          🔧 Catat Servis
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function alertItemHTML(it) {
+  const dotCls  = it.status === 'Terlambat' ? 'dot-red'
+                : it.status === 'Segera'     ? 'dot-yellow'
+                : 'dot-blue';
+  const psCls   = it.status === 'Terlambat' ? 'ps-red'
+                : it.status === 'Segera'     ? 'ps-yellow'
+                : 'ps-blue';
+  const label   = it.status === 'Cek Kondisi' ? 'Cek' : it.status;
+  const info    = it.sisa_km !== null
+    ? (it.sisa_km < 0 ? `lewat ${Math.abs(it.sisa_km).toLocaleString('id-ID')} km` : `sisa ${it.sisa_km.toLocaleString('id-ID')} km`)
+    : '';
+
+  return `
+  <div class="vcard-alert-item">
+    <div class="dot ${dotCls}"></div>
+    <span class="part-name">${it.nama_part}</span>
+    ${info ? `<span style="font-size:10px;color:rgba(255,255,255,.4);">${info}</span>` : ''}
+    <span class="part-status ${psCls}">${label}</span>
+  </div>`;
+}
+
+function renderFollowup() {
+  const section = document.getElementById('followupSection');
+  const list    = document.getElementById('followupList');
+
+  if (!state.followup.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  list.innerHTML = state.followup.map(f => `
+  <div class="followup-card">
+    <div class="fup-icon">📋</div>
+    <div class="fup-body">
+      <div class="fup-vehicle">${f.label}</div>
+      <div class="fup-note">${f.catatan_followup}</div>
+      <div class="fup-date">Servis: ${formatDate(f.tanggal_servis)}</div>
+    </div>
+  </div>`).join('');
+}
+
+function renderRencana() {
+  const container = document.getElementById('rencanaList');
+
+  container.innerHTML = state.kendaraan.map(v => {
+    const pengingatList = state.pengingat[v.plat_nomor] || [];
+    const wajib   = pengingatList.filter(it => it.status === 'Terlambat');
+    const segera  = pengingatList.filter(it => it.status === 'Segera');
+    const opsional= pengingatList.filter(it => it.status === 'Aman' && (it.sisa_km || 99999) < 3000);
+    const cekList = pengingatList.filter(it => it.status === 'Cek Kondisi');
+
+    const groups = [];
+    if (wajib.length)    groups.push({ label: 'Wajib',       cls: 'red',    items: wajib });
+    if (segera.length)   groups.push({ label: 'Segera',      cls: 'yellow', items: segera });
+    if (opsional.length) groups.push({ label: 'Opsional',    cls: 'gray',   items: opsional });
+    if (cekList.length)  groups.push({ label: 'Cek Kondisi', cls: 'blue',   items: cekList });
+
+    const worstCls = wajib.length ? 'red' : segera.length ? 'yellow' : 'green';
+    const worstEmoji = wajib.length ? '🔴' : segera.length ? '🟡' : '🟢';
+
+    return `
+    <div class="rencana-card" id="rencana-${String(v.plat_nomor||'').replace(/\s/g,'_')}">
+      <div class="rencana-header" onclick="toggleRencana(this)">
+        <div class="rh-left">
+          <span>${worstEmoji}</span>
+          <span>${v.merk} ${v.model} — ${v.plat_nomor}</span>
+        </div>
+        <span class="chev">▼</span>
+      </div>
+      <div class="rencana-body">
+        ${groups.length ? groups.map(g => `
+          <div class="rencana-group">
+            <div class="rencana-group-label">${g.label}</div>
+            ${g.items.map(it => `
+              <div class="rencana-item">
+                <div class="ri-dot" style="background:var(--${g.cls === 'red' ? 'red' : g.cls === 'yellow' ? 'yellow' : g.cls === 'blue' ? 'blue' : 'gray'})"></div>
+                <span class="ri-name">${it.nama_part}</span>
+                <span class="ri-info">${it.sisa_km !== null ? (it.sisa_km < 0 ? 'Lewat '+Math.abs(it.sisa_km).toLocaleString('id-ID')+' km' : 'Sisa '+it.sisa_km.toLocaleString('id-ID')+' km') : 'Cek fisik'}</span>
+              </div>`).join('')}
+          </div>`).join('')
+        : '<div style="font-size:12px;color:var(--text-sm);padding:8px 0;">Semua part dalam kondisi aman ✅</div>'}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Auto-expand kendaraan pertama
+  const first = document.querySelector('.rencana-card');
+  if (first) first.classList.add('open');
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────
+function getWorstStatus(items) {
+  if (items.some(it => it.status === 'Terlambat')) return 'Terlambat';
+  if (items.some(it => it.status === 'Segera'))    return 'Segera';
+  if (items.some(it => it.status === 'Cek Kondisi')) return 'Cek Kondisi';
+  return 'Aman';
+}
+
+function statusBadge(status) {
+  return {
+    'Terlambat':  { cls: 'badge-red',    label: '🔴 Terlambat' },
+    'Segera':     { cls: 'badge-yellow', label: '⚠️ Segera' },
+    'Cek Kondisi':{ cls: 'badge-blue',   label: '👁 Cek Kondisi' },
+    'Aman':       { cls: 'badge-green',  label: '✅ Aman' },
+  }[status] || { cls: 'badge-green', label: '✅ Aman' };
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatRp(num) {
+  if (num >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' jt';
+  if (num >= 1000)    return Math.round(num / 1000) + 'rb';
+  return num.toLocaleString('id-ID');
+}
+
+// ── TOGGLE RENCANA ────────────────────────────────────────────────────
+function toggleRencana(header) {
+  header.closest('.rencana-card').classList.toggle('open');
+}
+
+// ── UPDATE KM POPUP ───────────────────────────────────────────────────
+function openKmPopup(v) {
+  if (!state.activeUser) {
+    showToast('Pilih nama dulu ya 👆');
+    openUserPicker();
+    return;
+  }
+  state.kmEditTarget = v;
+  document.getElementById('kmPopupTitle').textContent = `Update KM — ${v.merk} ${v.model}`;
+  document.getElementById('kmPopupSub').textContent   = v.plat_nomor;
+  document.getElementById('kmPopupCurrent').textContent = v.km_terakhir.toLocaleString('id-ID') + ' km';
+  document.getElementById('kmInput').value = '';
+  document.getElementById('kmError').classList.remove('show');
+  document.getElementById('kmOdoWarn').style.display = 'none';
+  document.getElementById('kmSaveBtn').disabled = false;
+  document.getElementById('kmPopup').classList.add('open');
+  setTimeout(() => document.getElementById('kmInput').focus(), 300);
+}
+
+function closeKmPopup() {
+  document.getElementById('kmPopup').classList.remove('open');
+}
+
+document.getElementById('kmInput').addEventListener('input', function() {
+  const v = state.kmEditTarget;
+  if (!v) return;
+  const val = parseFloat(this.value);
+  const errEl  = document.getElementById('kmError');
+  const warnEl = document.getElementById('kmOdoWarn');
+  const saveBtn= document.getElementById('kmSaveBtn');
+
+  if (!this.value || isNaN(val)) {
+    errEl.classList.remove('show');
+    warnEl.style.display = 'none';
+    saveBtn.disabled = false;
+    return;
+  }
+  if (val < v.km_terakhir) {
+    errEl.classList.add('show');
+    warnEl.style.display = 'none';
+    saveBtn.disabled = true;
+  } else {
+    errEl.classList.remove('show');
+    saveBtn.disabled = false;
+    // odometer warning: lonjakan > 3000 km
+    if (val - v.km_terakhir > 3000) {
+      warnEl.textContent = `⚠️ KM naik ${(val - v.km_terakhir).toLocaleString('id-ID')} km. Pastikan angka sudah benar.`;
+      warnEl.style.display = 'block';
+    } else {
+      warnEl.style.display = 'none';
+    }
+  }
+});
+
+async function saveKm() {
+  const v   = state.kmEditTarget;
+  const val = parseFloat(document.getElementById('kmInput').value);
+
+  if (!val || isNaN(val) || val < v.km_terakhir) {
+    document.getElementById('kmError').classList.add('show');
+    return;
+  }
+
+  // Konfirmasi odometer
+  const warn = document.getElementById('kmOdoWarn');
+  if (warn.style.display === 'block') {
+    const ok = confirm(`KM naik ${(val - v.km_terakhir).toLocaleString('id-ID')} km. Lanjutkan?`);
+    if (!ok) return;
+  }
+
+  document.getElementById('kmSaveBtn').disabled = true;
+  document.getElementById('kmSaveBtn').textContent = 'Menyimpan...';
+
+  if (DEMO_MODE) {
+    // Update local state
+    const idx = state.kendaraan.findIndex(k => k.plat_nomor === v.plat_nomor);
+    if (idx !== -1) {
+      state.kendaraan[idx].km_terakhir = val;
+      state.kendaraan[idx].tgl_update_km = new Date().toISOString().split('T')[0];
+    }
+    setTimeout(() => {
+      closeKmPopup();
+      renderVehicleCards();
+      showToast(`KM ${v.merk} ${v.model} diperbarui ✓`);
+      document.getElementById('kmSaveBtn').textContent = 'Simpan';
+      document.getElementById('kmSaveBtn').disabled = false;
+    }, 600);
+  } else {
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'updateKM',
+          plat_nomor: v.plat_nomor,
+          km_terakhir: val,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      // Update local state
+      const idx = state.kendaraan.findIndex(k => k.plat_nomor === v.plat_nomor);
+      if (idx !== -1) {
+        state.kendaraan[idx].km_terakhir = val;
+        state.kendaraan[idx].tgl_update_km = new Date().toISOString().split('T')[0];
+      }
+      closeKmPopup();
+      renderVehicleCards();
+      showToast(`KM ${v.merk} ${v.model} diperbarui ✓`);
+    } catch(e) {
+      showToast('Gagal simpan. Coba lagi.');
+    } finally {
+      document.getElementById('kmSaveBtn').textContent = 'Simpan';
+      document.getElementById('kmSaveBtn').disabled = false;
+    }
+  }
+}
+
+// ── USER PICKER ───────────────────────────────────────────────────────
+function openUserPicker() {
+  const users = DEMO_MODE ? demoData.users : (state.users || []);
+  const list  = document.getElementById('userList');
+
+  list.innerHTML = users
+    .filter(u => u.status === 'Aktif')
+    .map(u => `
+    <div class="user-option" onclick="selectUser('${u.id_user}', '${u.nama_user}', '${u.role}')">
+      <div class="user-avatar">${u.nama_user[0]}</div>
+      <div class="user-info">
+        <div class="u-name">${u.nama_user}</div>
+        <div class="u-role">${u.role}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('userPopup').classList.add('open');
+}
+
+function selectUser(id, nama, role) {
+  state.activeUser = { id_user: id, nama_user: nama, role };
+  sessionStorage.setItem('garasi_user', JSON.stringify(state.activeUser));
+  document.getElementById('activeUserName').textContent = nama;
+  document.getElementById('userPopup').classList.remove('open');
+  showToast(`Halo, ${nama}! 👋`);
+}
+
+// Close popups on overlay click
+document.getElementById('kmPopup').addEventListener('click', function(e) {
+  if (e.target === this) closeKmPopup();
+});
+document.getElementById('userPopup').addEventListener('click', function(e) {
+  if (e.target === this) document.getElementById('userPopup').classList.remove('open');
+});
+
+// ── NAVIGATION ────────────────────────────────────────────────────────
+function filterAlerts(type) {
+  showToast(`Filter: ${type === 'terlambat' ? 'Terlambat' : type === 'segera' ? 'Segera' : 'Cek Kondisi'} — fitur detail ada di Tahap 6`);
+}
+
+function goToServis(plat) {
+  if (!state.activeUser) {
+    showToast('Pilih nama dulu ya 👆');
+    openUserPicker();
+    return;
+  }
+  showToast(`Catat Servis untuk ${plat} — dibangun di Tahap 4`);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── LOADING ───────────────────────────────────────────────────────────
+function hideLoading() {
+  const el = document.getElementById('loadingOverlay');
+  el.classList.add('done');
+  setTimeout(() => el.style.display = 'none', 500);
+}
+
+// ── KEYBOARD SHORTCUT ──────────────────────────────────────────────────
+document.getElementById('kmInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') saveKm();
+  if (e.key === 'Escape') closeKmPopup();
+});
+
+// ── DEMO BADGE ────────────────────────────────────────────────────────
+if (DEMO_MODE) {
+  const badge = document.createElement('div');
+  badge.textContent = 'DEMO MODE';
+  badge.style.cssText = `
+    position:fixed; top:8px; right:8px; z-index:1000;
+    background:#F59E0B; color:#fff; font-size:10px;
+    font-weight:700; padding:2px 8px; border-radius:10px;
+    letter-spacing:.5px;
+  `;
+  document.body.appendChild(badge);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Garasi IdR — Catat Servis Lengkap</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Familjen+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #F05E0E;
+  --navy: #0F1F4B;
+  --green: #22C55E;
+  --yellow: #F59E0B;
+  --red: #EF4444;
+  --blue: #3B82F6;
+  --gray: #9CA3AF;
+  --bg: #F1F5F9;
+}
+
+* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+html, body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: #1E293B; overscroll-behavior: none; }
+.font-display { font-family: 'Familjen Grotesk', sans-serif; }
+
+/* ── Inputs ── */
+.field-wrap { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 13px; font-weight: 600; color: #475569; letter-spacing: 0.01em; }
+.field-label .req { color: var(--red); margin-left: 2px; }
+.field-hint { font-size: 11px; color: #94A3B8; margin-top: -2px; }
+
+input, select, textarea {
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 14px;
+  width: 100%;
+  font-family: 'DM Sans', sans-serif;
+  background: #fff;
+  color: #1E293B;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(240,94,14,0.10);
+}
+input.err, select.err { border-color: var(--red); background: #FFF5F5; }
+input.ok { border-color: var(--green); }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input[type=number] { -moz-appearance: textfield; }
+textarea { resize: none; }
+select { background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+/* ── Error / Success messages ── */
+.err-msg { font-size: 12px; color: var(--red); display: flex; align-items: center; gap: 4px; }
+.err-msg::before { content: '⚠'; font-size: 11px; }
+.ok-msg { font-size: 12px; color: #16A34A; display: flex; align-items: center; gap: 4px; }
+.ok-msg::before { content: '✓'; }
+
+/* ── Section card ── */
+.section-card { background: #fff; border-radius: 16px; overflow: visible; }
+.section-header { font-size: 13px; font-weight: 700; color: #94A3B8; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 4px; margin-bottom: 12px; }
+
+/* ── Kendaraan selector ── */
+.kend-pill { border: 1.5px solid #E2E8F0; border-radius: 12px; background: #fff; cursor: pointer; transition: all 0.15s; padding: 12px 14px; }
+.kend-pill.sel { border-color: var(--orange); background: #FFF4EF; }
+.kend-pill:active { transform: scale(0.98); }
+
+/* ── Item rows ── */
+.item-row { background: #fff; border: 1.5px solid #E8EEF6; border-radius: 12px; padding: 12px; transition: border-color 0.15s; }
+.item-row:focus-within { border-color: #CBD5E1; }
+.item-row.jadwal-item { border-left: 3px solid var(--blue); }
+.item-row.manual-item { border-left: 3px solid var(--gray); }
+.item-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; border-radius: 6px; padding: 2px 7px; }
+.tag-jadwal { background: #EFF6FF; color: #2563EB; }
+.tag-manual { background: #F8FAFC; color: #64748B; }
+.tag-emergency { background: #FEE2E2; color: #DC2626; }
+
+/* ── Item slide-in ── */
+@keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+.item-row { animation: slideDown 0.2s ease; }
+
+/* ── Total display ── */
+.total-big { font-family: 'Familjen Grotesk', sans-serif; font-size: 32px; font-weight: 800; color: var(--orange); line-height: 1; }
+.total-wrap { background: linear-gradient(135deg, #FFF4EF 0%, #FFF9F6 100%); border-radius: 14px; padding: 18px 20px; border: 1.5px solid #FED7BA; }
+
+/* ── Buttons ── */
+.btn-primary { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--orange); color: #fff; border-radius: 12px; min-height: 52px; font-weight: 700; font-size: 15px; width: 100%; transition: all 0.15s; cursor: pointer; border: none; }
+.btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { display: flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px solid var(--orange); color: var(--orange); background: transparent; border-radius: 12px; min-height: 46px; font-weight: 600; font-size: 14px; width: 100%; transition: all 0.15s; cursor: pointer; }
+.btn-secondary:active { background: #FFF4EF; }
+.btn-ghost { color: #64748B; font-size: 13px; font-weight: 600; background: none; border: none; cursor: pointer; padding: 8px; border-radius: 8px; }
+.btn-ghost:active { background: #F1F5F9; }
+.btn-add-item { width: 100%; border: 2px dashed #CBD5E1; border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #94A3B8; font-weight: 600; font-size: 14px; background: transparent; cursor: pointer; transition: all 0.15s; }
+.btn-add-item:hover { border-color: #F05E0E60; color: var(--orange); background: #FFF9F7; }
+.btn-add-item:active { transform: scale(0.99); }
+
+/* ── Jadwal Servis picker ── */
+.jadwal-picker { background: #fff; border: 1.5px solid #E2E8F0; border-radius: 12px; max-height: 240px; overflow-y: auto; }
+.jadwal-item-opt { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; cursor: pointer; transition: background 0.1s; border-bottom: 1px solid #F1F5F9; }
+.jadwal-item-opt:last-child { border-bottom: none; }
+.jadwal-item-opt:hover { background: #F8FAFC; }
+.jadwal-item-opt.selected { background: #EFF6FF; }
+.jadwal-item-opt .nama { font-size: 13px; font-weight: 600; color: #1E293B; }
+.jadwal-item-opt .meta { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+.jadwal-item-opt .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Mode toggle (Quick/Full) ── */
+.mode-toggle { background: #E8EEF6; border-radius: 10px; padding: 3px; display: flex; }
+.mode-btn { flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; color: #64748B; background: transparent; }
+.mode-btn.active { background: #fff; color: var(--navy); box-shadow: 0 1px 4px rgba(0,0,0,0.10); }
+
+/* ── Follow-up toggle ── */
+.switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; inset: 0; background: #E2E8F0; border-radius: 26px; cursor: pointer; transition: 0.25s; }
+.slider:before { content: ''; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: 0.25s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.switch input:checked + .slider { background: var(--orange); }
+.switch input:checked + .slider:before { transform: translateX(22px); }
+
+/* ── Collapsible ── */
+.collapsible { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1); }
+.collapsible.open { max-height: 600px; }
+
+/* ── Bottom nav ── */
+.bottom-nav { height: 64px; background: #fff; border-top: 1px solid #E2E8F0; }
+
+/* ── Toast ── */
+.toast { position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1E293B; color: #fff; padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; opacity: 0; transition: all 0.28s ease; z-index: 9999; white-space: nowrap; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.err-toast { background: #DC2626; }
+.toast.ok-toast { background: #16A34A; }
+
+/* ── Modal ── */
+.modal-bg { position: fixed; inset: 0; background: rgba(15,31,75,0.5); backdrop-filter: blur(3px); z-index: 800; display: flex; align-items: flex-end; justify-content: center; padding: 16px; }
+.modal-box { background: #fff; border-radius: 20px 20px 16px 16px; width: 100%; max-width: 420px; overflow: hidden; }
+.modal-center { align-items: center; }
+
+/* ── Progress mini ── */
+.prog-bar { height: 3px; border-radius: 2px; background: #E2E8F0; }
+.prog-fill { height: 100%; border-radius: 2px; background: var(--orange); transition: width 0.4s ease; }
+
+/* ── Autocomplete dropdown ── */
+.autocomplete-list { position: absolute; left: 0; right: 0; top: calc(100% + 4px); background: #fff; border: 1.5px solid #E2E8F0; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100; overflow: hidden; max-height: 180px; overflow-y: auto; }
+.autocomplete-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #F8FAFC; transition: background 0.1s; }
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover, .autocomplete-item.focused { background: #FFF4EF; color: var(--orange); }
+
+/* ── Shimmer ── */
+.shimmer { background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size: 200% 100%; animation: shim 1.5s infinite; border-radius: 10px; }
+@keyframes shim { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ── Success check ── */
+@keyframes popIn { 0%{transform:scale(0) rotate(-10deg)}60%{transform:scale(1.15)}100%{transform:scale(1)} }
+.pop-in { animation: popIn 0.45s cubic-bezier(0.175,0.885,0.32,1.275) forwards; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<div class="sticky top-0 z-50" style="background:var(--navy);">
+  <div style="height:56px;" class="flex items-center px-4 gap-3">
+    <button onclick="history.back()" class="text-white/60 hover:text-white transition-colors p-1 -ml-1">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M19 12H5M5 12l6-6M5 12l6 6"/></svg>
+    </button>
+    <span class="font-display text-white text-lg tracking-wide">Catat Servis Lengkap</span>
+    <div class="ml-auto">
+      <span id="itemCountChip" class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);">0 item</span>
+    </div>
+  </div>
+  <!-- Mode toggle -->
+  <div class="px-4 pb-3 pt-0">
+    <div class="mode-toggle">
+      <button class="mode-btn" onclick="switchMode('quick')">⚡ Servis Cepat</button>
+      <button class="mode-btn active" onclick="switchMode('full')">📋 Form Lengkap</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ SCROLL BODY ══════════════════ -->
+<div class="pb-28" id="formBody">
+  <div class="px-4 pt-4 space-y-4">
+
+    <!-- ── § 1. USER ── -->
+    <div class="section-card p-4">
+      <p class="section-header">👤 Siapa yang mencatat</p>
+      <div class="field-wrap">
+        <label class="field-label">Nama Kamu <span class="req">*</span></label>
+        <select id="selUser" onchange="onUserChange()">
+          <option value="">— Pilih nama —</option>
+        </select>
+        <span id="userErr" class="err-msg hidden">Pilih nama user terlebih dahulu</span>
+      </div>
+    </div>
+
+    <!-- ── § 2. KENDARAAN ── -->
+    <div class="section-card p-4">
+      <p class="section-header">🚗 Kendaraan</p>
+      <div id="kendaraanGrid" class="grid gap-2.5" style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));">
+        <div class="shimmer h-20"></div>
+        <div class="shimmer h-20"></div>
+        <div class="shimmer h-20"></div>
+      </div>
+      <span id="kendErr" class="err-msg hidden mt-2">Pilih kendaraan terlebih dahulu</span>
+    </div>
+
+    <!-- ── § 3. WAKTU & TEMPAT ── -->
+    <div class="section-card p-4 space-y-3">
+      <p class="section-header">📅 Waktu & Tempat</p>
+
+      <!-- Tanggal -->
+      <div class="field-wrap">
+        <label class="field-label">Tanggal Servis <span class="req">*</span></label>
+        <input type="date" id="inpTanggal" onchange="validateTanggal()">
+        <span id="tanggalErr" class="err-msg hidden"></span>
+      </div>
+
+      <!-- KM -->
+      <div class="field-wrap">
+        <label class="field-label">KM Saat Servis <span class="req">*</span>
+          <span id="kmLastHint" class="font-normal text-slate-400 ml-1" style="font-size:11px;"></span>
+        </label>
+        <div class="relative">
+          <input type="number" id="inpKm" placeholder="Contoh: 12500" oninput="onKmInput()">
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium pointer-events-none">km</span>
+        </div>
+        <span id="kmErr" class="err-msg hidden"></span>
+        <span id="kmOk" class="ok-msg hidden">KM valid</span>
+      </div>
+
+      <!-- Bengkel -->
+      <div class="field-wrap">
+        <label class="field-label">Bengkel <span class="req">*</span></label>
+        <select id="selBengkel">
+          <option value="">— Pilih bengkel —</option>
+        </select>
+        <span class="field-hint">Tambah bengkel baru di Admin → Bengkel</span>
+        <span id="bengkelErr" class="err-msg hidden">Pilih bengkel terlebih dahulu</span>
+      </div>
+    </div>
+
+    <!-- ── § 4. ITEM SERVIS ── -->
+    <div class="section-card p-4">
+      <div class="flex items-center justify-between mb-3">
+        <p class="section-header mb-0">🔩 Item Servis</p>
+        <button onclick="toggleJadwalPicker()" id="btnPickerToggle"
+          class="text-xs font-bold px-3 py-1.5 rounded-full transition-all"
+          style="background:#EFF6FF;color:#2563EB;">
+          + Dari Jadwal Servis
+        </button>
+      </div>
+
+      <!-- Jadwal Servis picker (collapsible) -->
+      <div class="collapsible mb-3" id="jadwalPickerWrap">
+        <div style="padding-bottom:2px;">
+          <div class="relative mb-2">
+            <input type="text" id="jadwalSearch" placeholder="Cari part… (oli, busi, filter…)"
+              oninput="filterJadwal(this.value)" style="padding-left:36px;">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="16" height="16" fill="none" viewBox="0 0 24 24"><circle stroke="currentColor" stroke-width="2" cx="11" cy="11" r="7"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M20 20l-4-4"/></svg>
+          </div>
+          <div class="jadwal-picker" id="jadwalList"></div>
+          <button onclick="toggleJadwalPicker()" class="btn-ghost w-full mt-1 text-slate-400">Tutup ✕</button>
+        </div>
+      </div>
+
+      <!-- Item rows -->
+      <div id="itemRows" class="space-y-2.5 mb-3"></div>
+
+      <!-- Tambah manual -->
+      <button class="btn-add-item" onclick="addManualItem()">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+        Tambah Item Manual
+      </button>
+      <span id="itemsErr" class="err-msg hidden mt-2">Tambahkan minimal 1 item servis</span>
+    </div>
+
+    <!-- ── § 5. TOTAL ── -->
+    <div class="total-wrap">
+      <div class="flex items-end justify-between">
+        <div>
+          <p class="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">Total Biaya</p>
+          <div class="total-big" id="totalDisplay">Rp 0</div>
+        </div>
+        <div class="text-right">
+          <p class="text-xs text-slate-400 mb-1" id="totalItemCount">0 item</p>
+          <div class="prog-bar w-28" id="progBar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── § 6. CATATAN BENGKEL ── -->
+    <div class="section-card overflow-hidden">
+      <button onclick="toggleCatatan()" class="w-full flex items-center justify-between p-4 text-left">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:#FFF7ED;">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#F97316" stroke-width="2" stroke-linecap="round" d="M8 10h8M8 14h5"/><rect stroke="#F97316" stroke-width="2" x="3" y="4" width="18" height="16" rx="3"/></svg>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-slate-700">Catatan Bengkel</p>
+            <p class="text-xs text-slate-400">Tindak lanjut & catatan tambahan</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="catatanBadge" class="hidden text-xs font-bold px-2 py-0.5 rounded-full" style="background:#FEF3C7;color:#D97706;">Ada catatan</span>
+          <svg id="catatanChevron" width="18" height="18" fill="none" viewBox="0 0 24 24" class="text-slate-300 transition-transform"><path stroke="currentColor" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </button>
+
+      <div class="collapsible" id="catatanBody">
+        <div class="px-4 pb-4 space-y-3 border-t border-slate-50">
+          <!-- Follow-up toggle -->
+          <div class="flex items-start justify-between gap-3 pt-3">
+            <div>
+              <p class="text-sm font-semibold text-slate-700">Perlu Tindak Lanjut?</p>
+              <p class="text-xs text-slate-400 mt-0.5">Contoh: kampas rem mulai tipis, perlu ganti bulan depan</p>
+            </div>
+            <label class="switch flex-shrink-0">
+              <input type="checkbox" id="togFollowup" onchange="onFollowupToggle()">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div id="followupBox" class="hidden">
+            <textarea id="inpFollowup" rows="3" placeholder="Catatan tindak lanjut dari bengkel…" oninput="updateCatatanBadge()"></textarea>
+          </div>
+          <!-- Catatan umum -->
+          <div class="field-wrap">
+            <label class="field-label" style="font-size:12px;">Catatan Umum <span class="font-normal text-slate-400">(opsional)</span></label>
+            <textarea id="inpCatatan" rows="2" placeholder="Catatan tambahan lainnya…" oninput="updateCatatanBadge()"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── § 7. SIMPAN ── -->
+    <div class="space-y-3 pt-1 pb-2">
+      <!-- Summary before save -->
+      <div id="saveSummary" class="hidden rounded-12px p-3 text-sm space-y-1" style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;">
+        <p class="font-semibold text-green-800 text-xs uppercase tracking-wide mb-1">Siap Disimpan</p>
+        <div id="summaryLines" class="text-green-700 text-xs space-y-0.5"></div>
+      </div>
+
+      <button class="btn-primary" id="btnSimpan" onclick="handleSimpan()">
+        <span id="btnLabel">💾 Simpan Servis</span>
+        <span id="btnSpinner" class="hidden">
+          <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"/><path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8v8z"/></svg>
+          Menyimpan…
+        </span>
+      </button>
+      <button class="btn-secondary" onclick="resetConfirm()">🔄 Reset Form</button>
+    </div>
+
+  </div><!-- /px-4 -->
+</div><!-- /formBody -->
+
+<!-- ══════════════════ BOTTOM NAV ══════════════════ -->
+<nav class="bottom-nav fixed bottom-0 left-0 right-0 z-40 flex">
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('home')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1V10z"/><path stroke="currentColor" stroke-width="2" d="M9 21V12h6v9"/></svg>
+    <span style="font-size:10px;font-weight:500;">Home</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#4A90D9;">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3-3a1 1 0 000-1.4l-1.6-1.6a1 1 0 00-1.4 0l-3 3zM9 13l-4 4a2 2 0 002.8 2.8L12 16M9 13l2-2"/></svg>
+    <span style="font-size:10px;font-weight:600;color:#4A90D9;">Servis</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('cari')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><circle stroke="currentColor" stroke-width="2" cx="11" cy="11" r="7"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M20 20l-4-4"/></svg>
+    <span style="font-size:10px;font-weight:500;">Cari</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('laporan')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect stroke="currentColor" stroke-width="2" x="3" y="3" width="18" height="18" rx="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 17v-5M12 17v-9M16 17v-3"/></svg>
+    <span style="font-size:10px;font-weight:500;">Laporan</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('admin')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><circle stroke="currentColor" stroke-width="2" cx="12" cy="12" r="3"/><path stroke="currentColor" stroke-width="2" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span style="font-size:10px;font-weight:500;">Admin</span>
+  </a>
+</nav>
+
+<!-- ══════════════════ MODAL: ODOMETER WARNING ══════════════════ -->
+<div id="modalOdo" class="hidden fixed inset-0 z-50 modal-bg">
+  <div class="modal-box max-w-sm mx-auto">
+    <div class="p-5">
+      <div class="flex gap-3 items-start">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:#FEF9C3;">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#D97706" stroke-width="2" stroke-linecap="round" d="M12 8v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        </div>
+        <div>
+          <p class="font-bold text-slate-800">KM Naik Cukup Jauh</p>
+          <p class="text-sm text-slate-500 mt-1" id="odoMsg"></p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mt-5">
+        <button onclick="dismissOdo()" class="btn-secondary" style="min-height:44px;font-size:13px;">← Koreksi KM</button>
+        <button onclick="confirmOdo()" class="btn-primary" style="min-height:44px;font-size:13px;">Sudah Benar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODAL: DUPLIKAT ══════════════════ -->
+<div id="modalDuplikat" class="hidden fixed inset-0 z-50 modal-bg">
+  <div class="modal-box max-w-sm mx-auto">
+    <div class="p-5">
+      <p class="font-bold text-slate-800 mb-1">Item Sudah Ada</p>
+      <p class="text-sm text-slate-500" id="duplikatMsg"></p>
+      <div class="grid grid-cols-2 gap-3 mt-5">
+        <button onclick="closeDuplikat()" class="btn-secondary" style="min-height:44px;font-size:13px;">Batalkan</button>
+        <button onclick="confirmDuplikat()" class="btn-primary" style="min-height:44px;font-size:13px;">Tetap Tambah</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODAL: KONFIRMASI RESET ══════════════════ -->
+<div id="modalReset" class="hidden fixed inset-0 z-50 modal-bg">
+  <div class="modal-box max-w-sm mx-auto">
+    <div class="p-5">
+      <p class="font-bold text-slate-800 mb-1">Reset Form?</p>
+      <p class="text-sm text-slate-500">Semua data yang sudah diisi akan dihapus. Lanjutkan?</p>
+      <div class="grid grid-cols-2 gap-3 mt-5">
+        <button onclick="closeModal('modalReset')" class="btn-secondary" style="min-height:44px;font-size:13px;">Batal</button>
+        <button onclick="doReset()" class="btn-primary" style="min-height:44px;font-size:13px;background:#EF4444;">Ya, Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODAL: SUCCESS ══════════════════ -->
+<div id="modalSuccess" class="hidden fixed inset-0 z-50 modal-bg modal-center">
+  <div class="bg-white rounded-2xl p-7 w-full max-w-xs text-center mx-4 shadow-2xl">
+    <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 pop-in" style="background:#DCFCE7;">
+      <svg width="40" height="40" fill="none" viewBox="0 0 24 24"><path stroke="#16A34A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h3 class="font-display text-xl font-bold text-slate-800">Servis Tercatat!</h3>
+    <p class="text-sm text-slate-500 mt-2 mb-5" id="successMsg"></p>
+    <div id="successTagWrap" class="flex flex-wrap justify-center gap-1.5 mb-5"></div>
+    <div class="space-y-2.5">
+      <button onclick="navTo('home')" class="btn-primary text-sm" style="min-height:46px;">Ke Dashboard</button>
+      <button onclick="doReset();closeModal('modalSuccess')" class="btn-secondary text-sm" style="min-height:42px;">Catat Servis Lagi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ TOAST ══════════════════ -->
+<div id="toast" class="toast"></div>
+
+<!-- ══════════════════ SCRIPT ══════════════════ -->
+<script>
+// ─── CONFIG ───────────────────────────────────────────
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyc-9p2v_OwoMvbDoIIPXO5rOIeJv_WaY2iJeGiB_aHgatogwohiTBVhzDzHDNOay1glg/exec';
+
+// ─── STATE ────────────────────────────────────────────
+const S = {
+  users: [], kendaraan: [], bengkel: [], jadwalServis: [],
+  selUser: null, selKendaraan: null,
+  items: [],          // {id, nama, id_part, tipe_input, kategori_servis, kategori_biaya, biaya, fromJadwal}
+  kmValid: false, tanggalValid: false,
+  kmWarnPending: false, kmSelisih: 0,
+  odoCallback: null, duplikatCallback: null,
+  jadwalPickerOpen: false,
+  catatanOpen: false,
+};
+
+const KATEGORI_BIAYA = ['Oli/Cairan','Sparepart','Jasa','Ban','Emergency'];
+const KATEGORI_SERVIS = ['Rutin','Berkala','Kondisional','Emergency'];
+
+// ─── MOCK DATA ─────────────────────────────────────────
+const MOCK_USERS = [
+  {id_user:'U001',nama_user:'Ayah',role:'Admin',status:'Aktif'},
+  {id_user:'U002',nama_user:'Bunda',role:'Anggota',status:'Aktif'},
+  {id_user:'U003',nama_user:'Dika',role:'Anggota',status:'Aktif'},
+];
+const MOCK_KEND = [
+  {plat_nomor:'L 2345 ABC',merk:'Honda',model:'PCX 160',tahun:2022,warna:'Putih',pemilik:'Ayah',km_terakhir:12400,status:'Aktif'},
+  {plat_nomor:'L 6789 DEF',merk:'Yamaha',model:'Gear 125',tahun:2021,warna:'Hitam',pemilik:'Bunda',km_terakhir:8900,status:'Aktif'},
+  {plat_nomor:'L 1010 GHI',merk:'Honda',model:'Jazz',tahun:2020,warna:'Silver',pemilik:'Keluarga',km_terakhir:34500,status:'Aktif'},
+];
+const MOCK_BENGKEL = [
+  {id_bengkel:'BK001',nama_bengkel:'Ahass Sumber Motor',area:'Rungkut',spesialisasi:'Motor'},
+  {id_bengkel:'BK002',nama_bengkel:'Bengkel Pak Hendra',area:'Waru',spesialisasi:'Umum'},
+  {id_bengkel:'BK003',nama_bengkel:'Auto 2000',area:'Ahmad Yani',spesialisasi:'Mobil'},
+];
+const MOCK_JADWAL = [
+  {id_part:'P001',nama_part:'Oli mesin',interval_km:2000,interval_hari:60,kategori:'Rutin',status:'Segera'},
+  {id_part:'P002',nama_part:'Servis ringan',interval_km:2000,interval_hari:60,kategori:'Rutin',status:'Aman'},
+  {id_part:'P003',nama_part:'Oli gardan',interval_km:8000,interval_hari:180,kategori:'Berkala',status:'Aman'},
+  {id_part:'P004',nama_part:'Servis CVT',interval_km:8000,interval_hari:240,kategori:'Berkala',status:'Aman'},
+  {id_part:'P005',nama_part:'Filter oli',interval_km:8000,interval_hari:180,kategori:'Berkala',status:'Terlambat'},
+  {id_part:'P006',nama_part:'Busi',interval_km:8000,interval_hari:240,kategori:'Berkala',status:'Aman'},
+  {id_part:'P007',nama_part:'Air radiator',interval_km:9000,interval_hari:365,kategori:'Berkala',status:'Aman'},
+  {id_part:'P008',nama_part:'Filter udara',interval_km:12000,interval_hari:365,kategori:'Berkala',status:'Segera'},
+  {id_part:'P009',nama_part:'V-belt',interval_km:25000,interval_hari:730,kategori:'Berkala',status:'Aman'},
+  {id_part:'P010',nama_part:'Kampas rem',interval_km:null,interval_hari:null,kategori:'Kondisional',status:'Cek Kondisi'},
+  {id_part:'P011',nama_part:'Ban depan',interval_km:null,interval_hari:null,kategori:'Kondisional',status:'Cek Kondisi'},
+  {id_part:'P012',nama_part:'Oli shockbreaker',interval_km:10000,interval_hari:365,kategori:'Berkala',status:'Aman'},
+];
+
+const AUTOCOMPLETE_MANUAL = [
+  'Oli mesin','Filter oli','Busi','Filter udara','Servis CVT','Oli gardan','V-belt',
+  'Kampas rem','Ban depan','Ban belakang','Air radiator','Minyak rem','Roller CVT',
+  'Jasa servis','Jasa bongkar pasang','Oli shockbreaker','Radiator coolant',
+];
+
+// ─── INIT ──────────────────────────────────────────────
+async function init() {
+  // Set tanggal default hari ini
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inpTanggal').value = today;
+  S.tanggalValid = true;
+
+  try {
+    const [u,k,b,j] = await Promise.all([
+      apiFetch('getUsers'), apiFetch('getKendaraanAktif'),
+      apiFetch('getBengkel'), apiFetch('getJadwalServis'),
+    ]);
+    S.users = u || MOCK_USERS;
+    S.kendaraan = k || MOCK_KEND;
+    S.bengkel = b || MOCK_BENGKEL;
+    S.jadwalServis = j || MOCK_JADWAL;
+  } catch {
+    S.users = MOCK_USERS; S.kendaraan = MOCK_KEND;
+    S.bengkel = MOCK_BENGKEL; S.jadwalServis = MOCK_JADWAL;
+  }
+  renderUsers();
+  renderKendaraan();
+  renderBengkel();
+  renderJadwalList('');
+}
+
+async function apiFetch(action) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL==='YOUR_APPS_SCRIPT_URL_HERE') return null;
+  const url = new URL(APPS_SCRIPT_URL);
+  url.searchParams.set('action', action);
+  const r = await fetch(url); const d = await r.json();
+  return d.data || d;
+}
+
+// ─── RENDER ────────────────────────────────────────────
+function renderUsers() {
+  const sel = document.getElementById('selUser');
+  sel.innerHTML = '<option value="">— Pilih nama —</option>';
+  S.users.filter(u => u.status==='Aktif').forEach(u => {
+    const o = document.createElement('option');
+    o.value = u.id_user;
+    o.textContent = u.nama_user + (u.role==='Admin' ? ' ⚙' : '');
+    sel.appendChild(o);
+  });
+}
+
+function renderKendaraan() {
+  const wrap = document.getElementById('kendaraanGrid');
+  wrap.innerHTML = '';
+  S.kendaraan.filter(k=>k.status==='Aktif').forEach(k => {
+    const isSel = S.selKendaraan?.plat_nomor === k.plat_nomor;
+    const div = document.createElement('div');
+    div.className = `kend-pill ${isSel?'sel':''}`;
+    div.onclick = () => pickKendaraan(k);
+    div.innerHTML = `
+      <div class="flex items-start justify-between mb-1">
+        <p class="text-xs font-bold text-slate-600">${k.merk}</p>
+        ${isSel ? '<svg width="14" height="14" fill="none" viewBox="0 0 24 24"><circle fill="#F05E0E" cx="12" cy="12" r="12"/><path stroke="white" stroke-width="2.5" stroke-linecap="round" d="M7 12l3 3 7-7"/></svg>' : ''}
+      </div>
+      <p class="text-sm font-bold text-slate-800 leading-tight">${k.model}</p>
+      <p class="text-xs text-slate-400 mt-1">${k.plat_nomor}</p>
+      <p class="text-xs font-semibold mt-1" style="color:${isSel?'var(--orange)':'#94A3B8'}">${k.km_terakhir.toLocaleString('id-ID')} km</p>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+function renderBengkel() {
+  const sel = document.getElementById('selBengkel');
+  sel.innerHTML = '<option value="">— Pilih bengkel —</option>';
+  S.bengkel.forEach(b => {
+    const o = document.createElement('option');
+    o.value = b.id_bengkel;
+    o.textContent = `${b.nama_bengkel} — ${b.area}`;
+    sel.appendChild(o);
+  });
+}
+
+function renderJadwalList(q) {
+  const list = document.getElementById('jadwalList');
+  const jadwal = q
+    ? S.jadwalServis.filter(j => j.nama_part.toLowerCase().includes(q.toLowerCase()))
+    : S.jadwalServis;
+  const alreadySelected = S.items.filter(i=>i.id_part).map(i=>i.id_part);
+
+  if (!jadwal.length) {
+    list.innerHTML = '<div class="text-center text-slate-400 text-sm py-4">Tidak ada hasil</div>';
+    return;
+  }
+  list.innerHTML = jadwal.map(j => {
+    const isSel = alreadySelected.includes(j.id_part);
+    const dotColor = {Terlambat:'#EF4444',Segera:'#F59E0B',Aman:'#22C55E','Cek Kondisi':'#3B82F6'}[j.status]||'#9CA3AF';
+    const intText = j.interval_km ? `${j.interval_km.toLocaleString('id-ID')} km` : '—';
+    return `
+      <div class="jadwal-item-opt ${isSel?'selected':''}" onclick="pickFromJadwal('${j.id_part}')">
+        <div>
+          <p class="nama">${j.nama_part}</p>
+          <p class="meta">${j.kategori} • Interval: ${intText}</p>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+          <div class="status-dot" style="background:${dotColor};" title="${j.status}"></div>
+          ${isSel ? '<svg width="14" height="14" fill="#22C55E" viewBox="0 0 24 24"><path stroke="white" stroke-width="2.5" stroke-linecap="round" fill="#22C55E" d="M5 13l4 4L19 7" stroke-linejoin="round"/><circle fill="#22C55E" cx="12" cy="12" r="12"/><path stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M7 12l3 3 7-7"/></svg>' : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderItems() {
+  const wrap = document.getElementById('itemRows');
+  wrap.innerHTML = '';
+  S.items.forEach((item, idx) => {
+    const isJadwal = !!item.id_part;
+    const row = document.createElement('div');
+    row.className = `item-row ${isJadwal?'jadwal-item':'manual-item'}`;
+    row.innerHTML = `
+      <div class="flex items-center justify-between mb-2">
+        <span class="item-tag ${isJadwal?'tag-jadwal':'tag-manual'}">
+          ${isJadwal
+            ? '<svg width="10" height="10" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg> Jadwal Servis'
+            : '✏ Manual'
+          }
+        </span>
+        <button onclick="removeItem(${idx})" class="text-slate-300 hover:text-red-400 transition-colors p-0.5">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Nama item -->
+      <div class="relative mb-2">
+        <input type="text" value="${esc(item.nama)}" placeholder="Nama item…"
+          oninput="updateItem(${idx},'nama',this.value)"
+          onblur="hideAC(${idx})"
+          ${isJadwal ? 'readonly style="background:#F8FAFC;color:#64748B;"' : ''}
+          class="${item.nama?'':'err'}" style="font-size:13px;padding:9px 12px;">
+        <div id="ac_${idx}" class="autocomplete-list hidden"></div>
+      </div>
+
+      <!-- Row: kategori_servis / kategori_biaya / biaya -->
+      <div class="grid gap-2" style="grid-template-columns:1fr 1fr 90px;">
+        <div>
+          <p class="text-xs text-slate-400 mb-1 font-medium">Kategori Servis</p>
+          <select onchange="updateItem(${idx},'kategori_servis',this.value)" style="font-size:12px;padding:7px 10px;padding-right:28px;">
+            ${KATEGORI_SERVIS.map(k=>`<option value="${k}" ${item.kategori_servis===k?'selected':''}>${k}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1 font-medium">Kategori Biaya</p>
+          <select onchange="updateItem(${idx},'kategori_biaya',this.value)" style="font-size:12px;padding:7px 10px;padding-right:28px;">
+            ${KATEGORI_BIAYA.map(k=>`<option value="${k}" ${item.kategori_biaya===k?'selected':''}>${k}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <p class="text-xs text-slate-400 mb-1 font-medium">Biaya (Rp)</p>
+          <input type="number" value="${item.biaya||''}" placeholder="0"
+            oninput="updateItem(${idx},'biaya',this.value)"
+            class="${item.biaya>0?'ok':'err'}"
+            style="font-size:13px;padding:7px 10px;text-align:right;">
+        </div>
+      </div>
+      ${item.biaya<=0&&item.nama ? '<p class="text-xs text-red-400 mt-1.5">Biaya harus lebih dari 0</p>' : ''}
+    `;
+    wrap.appendChild(row);
+  });
+
+  updateTotal();
+  updateItemChip();
+  renderJadwalList(document.getElementById('jadwalSearch').value);
+}
+
+// ─── KENDARAAN PICK ────────────────────────────────────
+function pickKendaraan(k) {
+  S.selKendaraan = k;
+  document.getElementById('kmLastHint').textContent = `(terakhir: ${k.km_terakhir.toLocaleString('id-ID')} km)`;
+  hide('kendErr');
+  renderKendaraan();
+  // Filter jadwal sesuai kendaraan
+  S.jadwalServis = MOCK_JADWAL; // In real: apiFetch('getJadwalServis', {plat:k.plat_nomor})
+  renderJadwalList('');
+}
+
+// ─── USER CHANGE ───────────────────────────────────────
+function onUserChange() {
+  const uid = document.getElementById('selUser').value;
+  S.selUser = S.users.find(u=>u.id_user===uid)||null;
+  hide('userErr');
+}
+
+// ─── TANGGAL VALIDATION ────────────────────────────────
+function validateTanggal() {
+  const val = document.getElementById('inpTanggal').value;
+  const errEl = document.getElementById('tanggalErr');
+  const inp = document.getElementById('inpTanggal');
+  if (!val) { S.tanggalValid=false; return; }
+  const sel = new Date(val);
+  const max = new Date(); max.setDate(max.getDate()+7);
+  if (sel > max) {
+    errEl.textContent = 'Tanggal max 7 hari ke depan';
+    show('tanggalErr'); inp.classList.add('err');
+    S.tanggalValid = false;
+  } else {
+    hide('tanggalErr'); inp.classList.remove('err');
+    S.tanggalValid = true;
+  }
+}
+
+// ─── KM VALIDATION ─────────────────────────────────────
+function onKmInput() {
+  const val = parseInt(document.getElementById('inpKm').value)||0;
+  const inp = document.getElementById('inpKm');
+  const errEl = document.getElementById('kmErr');
+  const okEl = document.getElementById('kmOk');
+  const km0 = S.selKendaraan?.km_terakhir||0;
+
+  if (!val) { S.kmValid=false; inp.classList.remove('err','ok'); hide('kmErr'); hide('kmOk'); return; }
+
+  if (val < km0) {
+    errEl.textContent = `KM tidak valid — terakhir: ${km0.toLocaleString('id-ID')} km`;
+    show('kmErr'); hide('kmOk'); inp.classList.add('err'); inp.classList.remove('ok');
+    S.kmValid = false; return;
+  }
+  hide('kmErr'); inp.classList.remove('err'); inp.classList.add('ok');
+  show('kmOk');
+  S.kmValid = true;
+
+  // Odometer warning
+  const selisih = val - km0;
+  const thresh = Math.max(km0 * 0.2, 5000);
+  S.kmWarnPending = selisih > thresh && km0 > 0;
+  S.kmSelisih = selisih;
+}
+
+// ─── JADWAL PICKER ─────────────────────────────────────
+function toggleJadwalPicker() {
+  S.jadwalPickerOpen = !S.jadwalPickerOpen;
+  const wrap = document.getElementById('jadwalPickerWrap');
+  wrap.classList.toggle('open', S.jadwalPickerOpen);
+  document.getElementById('btnPickerToggle').style.background = S.jadwalPickerOpen ? '#DCFCE7' : '#EFF6FF';
+  document.getElementById('btnPickerToggle').style.color = S.jadwalPickerOpen ? '#15803D' : '#2563EB';
+  document.getElementById('btnPickerToggle').textContent = S.jadwalPickerOpen ? '✓ Tutup Jadwal' : '+ Dari Jadwal Servis';
+  if (S.jadwalPickerOpen) setTimeout(()=>document.getElementById('jadwalSearch').focus(), 300);
+}
+
+function filterJadwal(q) { renderJadwalList(q); }
+
+function pickFromJadwal(id_part) {
+  const j = S.jadwalServis.find(x=>x.id_part===id_part);
+  if (!j) return;
+
+  // Cek duplikat
+  if (S.items.find(i=>i.id_part===id_part)) {
+    showToast(`"${j.nama_part}" sudah ada di daftar`, 'err-toast');
+    return;
+  }
+  S.items.push({
+    id: Date.now(), nama: j.nama_part, id_part: j.id_part,
+    tipe_input: 'Dari Jadwal Servis',
+    kategori_servis: j.kategori==='Kondisional'?'Kondisional':'Rutin',
+    kategori_biaya: inferKategori(j.nama_part),
+    biaya: 0, fromJadwal: true,
+  });
+  renderItems();
+  hide('itemsErr');
+}
+
+function inferKategori(nama) {
+  const n = nama.toLowerCase();
+  if (n.includes('oli')||n.includes('air')||n.includes('minyak')||n.includes('coolant')) return 'Oli/Cairan';
+  if (n.includes('ban')) return 'Ban';
+  if (n.includes('jasa')||n.includes('servis')) return 'Jasa';
+  return 'Sparepart';
+}
+
+// ─── MANUAL ITEM ───────────────────────────────────────
+function addManualItem() {
+  S.items.push({
+    id: Date.now(), nama: '', id_part: null,
+    tipe_input: 'Manual', kategori_servis: 'Rutin',
+    kategori_biaya: 'Jasa', biaya: 0, fromJadwal: false,
+  });
+  renderItems();
+  hide('itemsErr');
+  setTimeout(()=>{
+    const rows = document.querySelectorAll('.item-row');
+    const last = rows[rows.length-1];
+    last?.scrollIntoView({behavior:'smooth',block:'center'});
+    last?.querySelector('input[type=text]')?.focus();
+  }, 150);
+}
+
+function removeItem(idx) {
+  if (S.items.length <= 1 && S.items[0].nama.trim()) {
+    showToast('Minimal 1 item servis', 'err-toast'); return;
+  }
+  S.items.splice(idx,1);
+  renderItems();
+}
+
+function updateItem(idx, field, val) {
+  if (field==='biaya') val = parseFloat(val)||0;
+  S.items[idx][field] = val;
+  if (field==='nama') showAC(idx, val);
+  updateTotal();
+  updateItemChip();
+  // Re-render only borders (avoid full re-render which loses focus)
+  const rows = document.querySelectorAll('.item-row');
+  const row = rows[idx];
+  if (row && field==='biaya') {
+    const inp = row.querySelectorAll('input[type=number]')[0];
+    if (inp) { inp.classList.toggle('ok', val>0); inp.classList.toggle('err', val<=0); }
+    const errp = row.querySelector('p.text-red-400');
+    if (val>0 && errp) errp.remove();
+  }
+}
+
+// ─── AUTOCOMPLETE ──────────────────────────────────────
+let acTimer;
+function showAC(idx, q) {
+  clearTimeout(acTimer);
+  const box = document.getElementById(`ac_${idx}`);
+  if (!box) return;
+  if (!q || q.length < 2) { box.classList.add('hidden'); return; }
+  const hits = AUTOCOMPLETE_MANUAL.filter(s=>s.toLowerCase().includes(q.toLowerCase()) && s.toLowerCase()!==q.toLowerCase()).slice(0,6);
+  if (!hits.length) { box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  box.innerHTML = hits.map((s,i)=>`
+    <div class="autocomplete-item" onmousedown="pickAC(event,${idx},'${esc(s)}')">${s}</div>
+  `).join('');
+}
+
+function pickAC(e, idx, val) {
+  e.preventDefault();
+  S.items[idx].nama = val;
+  S.items[idx].kategori_biaya = inferKategori(val);
+  renderItems();
+}
+
+function hideAC(idx) {
+  acTimer = setTimeout(()=>{ document.getElementById(`ac_${idx}`)?.classList.add('hidden'); }, 200);
+}
+
+// ─── TOTAL & CHIPS ─────────────────────────────────────
+function updateTotal() {
+  const total = S.items.reduce((s,i)=>s+(parseFloat(i.biaya)||0),0);
+  document.getElementById('totalDisplay').textContent = rp(total);
+  const pct = Math.min((total/1000000)*100, 100);
+  document.getElementById('progFill').style.width = pct+'%';
+  const valid = S.items.filter(i=>i.nama.trim()&&i.biaya>0).length;
+  document.getElementById('totalItemCount').textContent = `${valid} item valid`;
+}
+
+function updateItemChip() {
+  const n = S.items.filter(i=>i.nama.trim()).length;
+  const chip = document.getElementById('itemCountChip');
+  chip.textContent = `${n} item`;
+  chip.style.background = n>0 ? 'rgba(240,94,14,0.2)' : 'rgba(255,255,255,0.12)';
+  chip.style.color = n>0 ? '#FED7AA' : 'rgba(255,255,255,0.5)';
+}
+
+// ─── CATATAN ───────────────────────────────────────────
+function toggleCatatan() {
+  S.catatanOpen = !S.catatanOpen;
+  document.getElementById('catatanBody').classList.toggle('open', S.catatanOpen);
+  document.getElementById('catatanChevron').style.transform = S.catatanOpen ? 'rotate(180deg)' : '';
+}
+function onFollowupToggle() {
+  const on = document.getElementById('togFollowup').checked;
+  document.getElementById('followupBox').classList.toggle('hidden', !on);
+  updateCatatanBadge();
+}
+function updateCatatanBadge() {
+  const hasFollowup = document.getElementById('togFollowup').checked;
+  const hasNote = document.getElementById('inpCatatan').value.trim().length>0;
+  const badge = document.getElementById('catatanBadge');
+  badge.classList.toggle('hidden', !hasFollowup && !hasNote);
+}
+
+// ─── SAVE FLOW ─────────────────────────────────────────
+function handleSimpan() {
+  // Run all validations
+  const errs = [];
+  if (!S.selUser) { show('userErr'); errs.push('Nama belum dipilih'); }
+  if (!S.selKendaraan) { show('kendErr'); errs.push('Kendaraan belum dipilih'); }
+  if (!S.tanggalValid) errs.push('Tanggal tidak valid');
+  const km = parseInt(document.getElementById('inpKm').value)||0;
+  if (!km || !S.kmValid) { show('kmErr'); document.getElementById('kmErr').textContent='Isi KM servis yang valid'; errs.push('KM tidak valid'); }
+  if (!document.getElementById('selBengkel').value) { show('bengkelErr'); errs.push('Bengkel belum dipilih'); }
+
+  const validItems = S.items.filter(i=>i.nama.trim());
+  if (!validItems.length) { show('itemsErr'); errs.push('Minimal 1 item'); }
+  const biaya0 = validItems.filter(i=>i.biaya<=0);
+  if (biaya0.length) errs.push(`Biaya "${biaya0[0].nama}" harus > 0`);
+
+  if (errs.length) {
+    showToast(errs[0], 'err-toast');
+    // Scroll ke error pertama
+    document.querySelector('.err')?.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+
+  // Odometer warning
+  if (S.kmWarnPending) {
+    document.getElementById('odoMsg').innerHTML = `KM naik sekitar <b>${S.kmSelisih.toLocaleString('id-ID')} km</b> dari terakhir tercatat. Benar?`;
+    show('modalOdo');
+    S.odoCallback = doSave;
+    return;
+  }
+  doSave();
+}
+
+async function doSave() {
+  const km = parseInt(document.getElementById('inpKm').value);
+  const tanggal = document.getElementById('inpTanggal').value;
+  const bengkelId = document.getElementById('selBengkel').value;
+  const followup = document.getElementById('togFollowup').checked;
+  const catatanFollowup = document.getElementById('inpFollowup').value.trim();
+  const catatan = document.getElementById('inpCatatan').value.trim();
+  const validItems = S.items.filter(i=>i.nama.trim()&&i.biaya>0);
+  const total = validItems.reduce((s,i)=>s+i.biaya,0);
+
+  // Show loading
+  document.getElementById('btnLabel').classList.add('hidden');
+  document.getElementById('btnSpinner').classList.remove('hidden');
+  document.getElementById('btnSimpan').disabled = true;
+
+  const payload = {
+    action: 'simpanServis',
+    plat_nomor: S.selKendaraan.plat_nomor,
+    input_oleh: S.selUser.id_user,
+    nama_input_oleh: S.selUser.nama_user,
+    tanggal_servis: tanggal,
+    km_servis: km,
+    id_bengkel: bengkelId,
+    perlu_followup: followup ? 'Ya' : 'Tidak',
+    catatan_followup: catatanFollowup,
+    catatan: catatan,
+    total_biaya: total,
+    items: JSON.stringify(validItems.map(i=>({
+      nama_item: i.nama, id_part: i.id_part||'',
+      tipe_input: i.tipe_input, kategori_servis: i.kategori_servis,
+      kategori_biaya: i.kategori_biaya, biaya: i.biaya,
+    }))),
+  };
+
+  try {
+    if (APPS_SCRIPT_URL && APPS_SCRIPT_URL!=='YOUR_APPS_SCRIPT_URL_HERE') {
+      const res = await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const d = await res.json();
+      if (!d.success) throw new Error(d.message||'Gagal simpan');
+    } else {
+      await sleep(1300); // mock delay
+    }
+
+    // Success
+    const bengkelNama = S.bengkel.find(b=>b.id_bengkel===bengkelId);
+    document.getElementById('successMsg').textContent =
+      `${S.selKendaraan.merk} ${S.selKendaraan.model} — ${validItems.length} item — ${rp(total)}`;
+
+    // Tags
+    const tagWrap = document.getElementById('successTagWrap');
+    tagWrap.innerHTML = '';
+    validItems.slice(0,5).forEach(i=>{
+      const span = document.createElement('span');
+      span.className = 'item-tag tag-jadwal text-xs';
+      span.style.cssText = 'background:#F0FDF4;color:#15803D;font-size:11px;';
+      span.textContent = i.nama;
+      tagWrap.appendChild(span);
+    });
+    if (validItems.length>5) {
+      const more = document.createElement('span');
+      more.className='item-tag'; more.style.cssText='background:#F8FAFC;color:#64748B;font-size:11px;';
+      more.textContent = `+${validItems.length-5} lagi`;
+      tagWrap.appendChild(more);
+    }
+
+    show('modalSuccess');
+  } catch(e) {
+    showToast('Gagal: '+e.message, 'err-toast');
+  } finally {
+    document.getElementById('btnLabel').classList.remove('hidden');
+    document.getElementById('btnSpinner').classList.add('hidden');
+    document.getElementById('btnSimpan').disabled = false;
+  }
+}
+
+// ─── ODO MODAL ─────────────────────────────────────────
+function dismissOdo() { hide('modalOdo'); document.getElementById('inpKm').focus(); S.odoCallback=null; }
+function confirmOdo() { hide('modalOdo'); S.odoCallback?.(); S.odoCallback=null; }
+
+// ─── DUPLIKAT ──────────────────────────────────────────
+let _pendingDup = null;
+function closeDuplikat() { hide('modalDuplikat'); _pendingDup=null; }
+function confirmDuplikat() {
+  if (_pendingDup) { S.items.push(_pendingDup); renderItems(); _pendingDup=null; }
+  hide('modalDuplikat');
+}
+
+// ─── RESET ─────────────────────────────────────────────
+function resetConfirm() { show('modalReset'); }
+function doReset() {
+  S.selUser=null; S.selKendaraan=null; S.items=[];
+  S.kmValid=false; S.tanggalValid=false; S.kmWarnPending=false;
+  document.getElementById('selUser').value='';
+  document.getElementById('inpTanggal').value=new Date().toISOString().split('T')[0];
+  document.getElementById('inpKm').value='';
+  document.getElementById('selBengkel').value='';
+  document.getElementById('togFollowup').checked=false;
+  document.getElementById('followupBox').classList.add('hidden');
+  document.getElementById('inpFollowup').value='';
+  document.getElementById('inpCatatan').value='';
+  document.getElementById('catatanBody').classList.remove('open');
+  document.getElementById('catatanChevron').style.transform='';
+  document.getElementById('kmLastHint').textContent='';
+  document.getElementById('inpKm').classList.remove('err','ok');
+  ['userErr','kendErr','kmErr','kmOk','tanggalErr','bengkelErr','itemsErr'].forEach(hide);
+  hide('saveSummary'); hide('modalReset');
+  S.catatanOpen=false; S.tanggalValid=true;
+  renderKendaraan(); renderItems(); updateItemChip(); updateTotal();
+  window.scrollTo({top:0,behavior:'smooth'});
+  showToast('Form direset', 'ok-toast');
+}
+
+// ─── MODE SWITCH ───────────────────────────────────────
+function switchMode(mode) {
+  document.querySelectorAll('.mode-btn').forEach((b,i)=>{
+    b.classList.toggle('active', (mode==='quick'&&i===0)||(mode==='full'&&i===1));
+  });
+  if (mode==='quick') navTo('quick'); // Navigate to tahap4
+}
+
+// ─── HELPERS ───────────────────────────────────────────
+function rp(n) { return 'Rp '+Math.floor(n||0).toLocaleString('id-ID'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function show(id) { document.getElementById(id)?.classList.remove('hidden'); }
+function hide(id) { document.getElementById(id)?.classList.add('hidden'); }
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+function closeModal(id) { hide(id); }
+function navTo(p) { showToast(`→ ${p}`, ''); }
+
+let _toastTimer;
+function showToast(msg, cls='') {
+  const el = document.getElementById('toast');
+  el.textContent=msg; el.className=`toast show ${cls}`;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>el.classList.remove('show'), 3200);
+}
+
+// Close modals on bg click
+['modalOdo','modalDuplikat','modalReset','modalSuccess'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('click',e=>{ if(e.target.id===id) closeModal(id); });
+});
+
+// ─── BOOT ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

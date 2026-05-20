@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Garasi IdR — Detail Kendaraan</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange:#F05E0E; --navy:#0F1F4B; --navy2:#162660;
+  --green:#22C55E; --yellow:#F59E0B; --red:#EF4444;
+  --blue:#3B82F6; --gray:#9CA3AF; --followup:#F97316;
+  --bg:#EEF2F8;
+}
+*{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}
+html,body{background:var(--bg);font-family:'Outfit',sans-serif;color:#1E293B;overscroll-behavior:none;height:100%;}
+.mono{font-family:'JetBrains Mono',monospace;}
+
+/* ── Header hero ── */
+.hero{background:linear-gradient(160deg,var(--navy) 0%,var(--navy2) 60%,#1a3580 100%);position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,0.04);}
+.hero::after{content:'';position:absolute;bottom:-30px;left:-20px;width:140px;height:140px;border-radius:50%;background:rgba(240,94,14,0.08);}
+
+/* ── Tabs ── */
+.tab-bar{background:#fff;border-bottom:2px solid #E8EEF6;position:sticky;top:0;z-index:30;}
+.tab-btn{flex:1;padding:14px 0 12px;font-size:14px;font-weight:600;color:#94A3B8;border:none;background:none;cursor:pointer;position:relative;transition:color 0.2s;}
+.tab-btn.active{color:var(--navy);}
+.tab-btn.active::after{content:'';position:absolute;bottom:-2px;left:15%;right:15%;height:2.5px;border-radius:2px;background:var(--orange);}
+
+/* ── Tab panels ── */
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+
+/* ── Info table ── */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #F1F5F9;}
+.info-row:last-child{border-bottom:none;}
+.info-label{font-size:13px;color:#94A3B8;font-weight:500;}
+.info-value{font-size:14px;font-weight:600;color:#1E293B;text-align:right;}
+
+/* ── Status badges ── */
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;}
+.badge-aman{background:#DCFCE7;color:#15803D;}
+.badge-segera{background:#FEF9C3;color:#92400E;}
+.badge-terlambat{background:#FEE2E2;color:#B91C1C;}
+.badge-cek{background:#DBEAFE;color:#1D4ED8;}
+.badge-tidak{background:#F1F5F9;color:#64748B;}
+.badge-aktif{background:#DCFCE7;color:#15803D;}
+.badge-jual{background:#FEE2E2;color:#B91C1C;}
+
+/* ── Progress bar ── */
+.prog-wrap{background:#E8EEF6;border-radius:99px;height:8px;overflow:hidden;position:relative;}
+.prog-fill{height:100%;border-radius:99px;transition:width 1s cubic-bezier(0.4,0,0.2,1);position:relative;}
+.prog-fill::after{content:'';position:absolute;top:0;right:0;bottom:0;width:6px;border-radius:99px;background:rgba(255,255,255,0.4);}
+
+/* ── Part cards ── */
+.part-card{background:#fff;border-radius:14px;padding:14px 16px;border:1.5px solid #E8EEF6;transition:all 0.15s;}
+.part-card.terlambat{border-color:#FECACA;background:#FFF5F5;}
+.part-card.segera{border-color:#FDE68A;background:#FFFBEB;}
+.part-card.cek{border-color:#BFDBFE;background:#EFF6FF;}
+
+/* ── Rencana groups ── */
+.rencana-group{border-radius:12px;overflow:hidden;border:1.5px solid #E8EEF6;}
+.rencana-header{padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
+.rencana-item{padding:11px 14px;border-top:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between;background:#fff;}
+
+/* ── Timeline ── */
+.timeline-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.timeline-line{width:2px;background:#E8EEF6;flex-shrink:0;margin-left:5px;}
+.invoice-card{background:#fff;border-radius:14px;border:1.5px solid #E8EEF6;overflow:hidden;transition:all 0.2s;}
+.invoice-card.highlighted{border-color:var(--orange);box-shadow:0 0 0 3px rgba(240,94,14,0.12);}
+.invoice-header{padding:14px 16px;border-bottom:1px solid #F1F5F9;}
+.invoice-items{padding:10px 16px 14px;}
+.invoice-item-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #F8FAFC;font-size:13px;}
+.invoice-item-row:last-child{border-bottom:none;}
+
+/* ── Bottom nav ── */
+.bottom-nav{height:64px;background:#fff;border-top:1px solid #E2E8F0;}
+
+/* ── Buttons ── */
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--orange);color:#fff;border-radius:12px;min-height:48px;font-weight:700;font-size:14px;border:none;cursor:pointer;transition:all 0.15s;width:100%;}
+.btn-primary:active{transform:scale(0.98);opacity:0.9;}
+.btn-outline{display:flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid #E2E8F0;color:#475569;background:#fff;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn-outline:active{background:#F8FAFC;}
+
+/* ── Shimmer ── */
+.shimmer{background:linear-gradient(90deg,#e8eef6 25%,#dce4f0 50%,#e8eef6 75%);background-size:200% 100%;animation:shim 1.5s infinite;border-radius:10px;}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(16px);background:#1E293B;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:all 0.25s;z-index:999;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp 0.3s ease forwards;}
+.fade-up-d1{animation-delay:0.05s;opacity:0;}
+.fade-up-d2{animation-delay:0.10s;opacity:0;}
+.fade-up-d3{animation-delay:0.15s;opacity:0;}
+
+/* ── Highlight pulse ── */
+@keyframes highlightPulse{0%{box-shadow:0 0 0 0 rgba(240,94,14,0.4)}70%{box-shadow:0 0 0 8px rgba(240,94,14,0)}100%{box-shadow:0 0 0 0 rgba(240,94,14,0)}}
+.highlight-pulse{animation:highlightPulse 0.8s ease 3;}
+
+/* ── KM chip ── */
+.km-chip{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);border-radius:8px;padding:3px 10px;}
+
+/* ── Scroll ── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:#E2E8F0;border-radius:3px;}
+
+/* ── Section title ── */
+.sec-title{font-size:11px;font-weight:700;color:#94A3B8;letter-spacing:0.08em;text-transform:uppercase;padding:0 2px;margin-bottom:10px;}
+</style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+<!-- ══════════════ HERO HEADER ══════════════ -->
+<div class="hero pt-safe" id="heroSection">
+  <!-- Back + actions -->
+  <div class="flex items-center px-4 pt-3 pb-2 gap-2">
+    <button onclick="history.back()" class="text-white/60 hover:text-white transition-colors p-1 -ml-1">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M19 12H5M5 12l6-6M5 12l6 6"/></svg>
+    </button>
+    <span class="text-white/40 text-sm font-medium">Detail Kendaraan</span>
+    <div class="ml-auto flex gap-2">
+      <button onclick="openCatatServis()" class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-all" style="background:rgba(240,94,14,0.25);color:#FED7AA;">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+        Catat Servis
+      </button>
+    </div>
+  </div>
+
+  <!-- Kendaraan identity -->
+  <div class="px-4 pb-5 pt-1 relative z-10">
+    <div class="flex items-start justify-between">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span id="heroMerk" class="text-white/50 text-sm font-medium">Honda</span>
+          <span id="heroStatus" class="badge badge-aktif" style="font-size:10px;">Aktif</span>
+        </div>
+        <h1 id="heroModel" class="text-white font-bold leading-tight" style="font-size:26px;font-family:'Outfit',sans-serif;">PCX 160</h1>
+        <p id="heroPlat" class="mono text-white/60 text-sm mt-1">L 2345 ABC</p>
+      </div>
+      <!-- KM display -->
+      <div class="text-right">
+        <p class="text-white/40 text-xs mb-1">KM Terakhir</p>
+        <p id="heroKm" class="mono text-white font-bold" style="font-size:22px;">12.400</p>
+        <p class="text-white/40 text-xs">km</p>
+      </div>
+    </div>
+
+    <!-- Quick stats row -->
+    <div class="grid grid-cols-3 gap-2 mt-4">
+      <div class="rounded-11px py-2.5 px-3 text-center" style="background:rgba(255,255,255,0.08);border-radius:11px;">
+        <p id="statTerlambat" class="font-bold text-red-400" style="font-size:20px;">0</p>
+        <p class="text-white/40 text-xs mt-0.5">Terlambat</p>
+      </div>
+      <div class="rounded-11px py-2.5 px-3 text-center" style="background:rgba(255,255,255,0.08);border-radius:11px;">
+        <p id="statSegera" class="font-bold text-yellow-400" style="font-size:20px;">0</p>
+        <p class="text-white/40 text-xs mt-0.5">Segera</p>
+      </div>
+      <div class="rounded-11px py-2.5 px-3 text-center" style="background:rgba(255,255,255,0.08);border-radius:11px;">
+        <p id="statAman" class="font-bold text-green-400" style="font-size:20px;">0</p>
+        <p class="text-white/40 text-xs mt-0.5">Aman</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ TAB BAR ══════════════ -->
+<div class="tab-bar" id="tabBar">
+  <div class="flex">
+    <button class="tab-btn active" id="tab-info" onclick="switchTab('info')">
+      ℹ Info
+    </button>
+    <button class="tab-btn" id="tab-pengingat" onclick="switchTab('pengingat')">
+      🔔 Pengingat
+    </button>
+    <button class="tab-btn" id="tab-histori" onclick="switchTab('histori')">
+      📋 Histori
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════ PANELS ══════════════ -->
+<div class="flex-1 pb-24" id="panelWrap">
+
+  <!-- ────── TAB: INFO ────── -->
+  <div class="tab-panel active" id="panel-info">
+    <div class="px-4 pt-4 space-y-4">
+
+      <!-- Data kendaraan -->
+      <div class="bg-white rounded-16px p-4" style="border-radius:16px;">
+        <p class="sec-title">Data Kendaraan</p>
+        <div id="infoRows"></div>
+      </div>
+
+      <!-- KM history mini -->
+      <div class="bg-white rounded-16px p-4" style="border-radius:16px;">
+        <p class="sec-title">Odometer</p>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-2xl font-bold text-slate-800 mono" id="infoKmTerakhir">—</p>
+            <p class="text-xs text-slate-400 mt-0.5">KM Terakhir tercatat</p>
+          </div>
+          <button onclick="openUpdateKm()" class="btn-outline">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18.5 2.5a2 2 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Update KM
+          </button>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-50">
+          <div class="flex justify-between text-xs text-slate-400">
+            <span>KM Awal</span>
+            <span id="infoKmAwal" class="mono font-semibold text-slate-500">—</span>
+          </div>
+          <div class="flex justify-between text-xs text-slate-400 mt-1">
+            <span>Total jarak tempuh</span>
+            <span id="infoJarak" class="mono font-semibold text-slate-500">—</span>
+          </div>
+          <div class="flex justify-between text-xs text-slate-400 mt-1">
+            <span>Update terakhir</span>
+            <span id="infoKmUpdate" class="font-semibold text-slate-500">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tombol admin (hanya admin) -->
+      <div id="adminActions" class="hidden space-y-2">
+        <p class="sec-title">Admin</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="editKendaraan()" class="btn-outline"><svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2 2 0 013 3L12 15l-4 1 1-4z"/></svg>Edit Data</button>
+          <button onclick="ubahKondisi()" class="btn-outline"><svg width="14" height="14" fill="none" viewBox="0 0 24 24"><circle stroke="currentColor" stroke-width="2" cx="12" cy="12" r="9"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 8v4l3 3"/></svg>Ubah Kondisi</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ────── TAB: PENGINGAT ────── -->
+  <div class="tab-panel" id="panel-pengingat">
+    <div class="px-4 pt-4 space-y-5">
+
+      <!-- Rencana servis berikutnya -->
+      <div>
+        <p class="sec-title">Rencana Servis Berikutnya</p>
+        <div id="rencanaWrap" class="space-y-2"></div>
+      </div>
+
+      <!-- Semua part -->
+      <div>
+        <p class="sec-title">Status Semua Part</p>
+        <div id="allPartsWrap" class="space-y-2.5"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ────── TAB: HISTORI ────── -->
+  <div class="tab-panel" id="panel-histori">
+    <div class="px-4 pt-4 space-y-4">
+
+      <!-- Summary strip -->
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-white rounded-12px p-3 text-center" style="border-radius:12px;">
+          <p id="histTotal" class="font-bold text-slate-800" style="font-size:18px;">0</p>
+          <p class="text-xs text-slate-400 mt-0.5">Kunjungan</p>
+        </div>
+        <div class="bg-white rounded-12px p-3 text-center" style="border-radius:12px;">
+          <p id="histBiaya" class="font-bold" style="font-size:15px;color:var(--orange);">Rp 0</p>
+          <p class="text-xs text-slate-400 mt-0.5">Total Biaya</p>
+        </div>
+        <div class="bg-white rounded-12px p-3 text-center" style="border-radius:12px;">
+          <p id="histBengkel" class="font-bold text-slate-800" style="font-size:18px;">0</p>
+          <p class="text-xs text-slate-400 mt-0.5">Bengkel</p>
+        </div>
+      </div>
+
+      <!-- Search filter quick -->
+      <div class="relative">
+        <input type="text" id="histSearch" placeholder="Cari bengkel atau item servis…"
+          oninput="filterHistori(this.value)"
+          style="padding-left:38px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;font-family:'Outfit',sans-serif;background:#fff;color:#1E293B;outline:none;width:100%;padding-top:10px;padding-bottom:10px;">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" width="16" height="16" fill="none" viewBox="0 0 24 24"><circle stroke="currentColor" stroke-width="2" cx="11" cy="11" r="7"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M20 20l-4-4"/></svg>
+      </div>
+
+      <!-- Timeline -->
+      <div id="historiTimeline" class="space-y-3"></div>
+
+    </div>
+  </div>
+
+</div><!-- /panelWrap -->
+
+<!-- ══════════════ BOTTOM NAV ══════════════ -->
+<nav class="bottom-nav fixed bottom-0 left-0 right-0 z-40 flex">
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#E8622A;" onclick="navTo('home')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1V10z"/><path stroke="currentColor" stroke-width="2" d="M9 21V12h6v9"/></svg>
+    <span style="font-size:10px;font-weight:600;color:#E8622A;">Home</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('servis')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3-3a1 1 0 000-1.4l-1.6-1.6a1 1 0 00-1.4 0l-3 3zM9 13l-4 4a2 2 0 002.8 2.8L12 16M9 13l2-2"/></svg>
+    <span style="font-size:10px;font-weight:500;">Servis</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('cari')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><circle stroke="currentColor" stroke-width="2" cx="11" cy="11" r="7"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M20 20l-4-4"/></svg>
+    <span style="font-size:10px;font-weight:500;">Cari</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('laporan')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect stroke="currentColor" stroke-width="2" x="3" y="3" width="18" height="18" rx="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 17v-5M12 17v-9M16 17v-3"/></svg>
+    <span style="font-size:10px;font-weight:500;">Laporan</span>
+  </a>
+  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('admin')">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><circle stroke="currentColor" stroke-width="2" cx="12" cy="12" r="3"/><path stroke="currentColor" stroke-width="2" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span style="font-size:10px;font-weight:500;">Admin</span>
+  </a>
+</nav>
+
+<!-- ══════════════ MODAL: UPDATE KM ══════════════ -->
+<div id="modalKm" class="hidden fixed inset-0 z-50 flex items-end justify-center px-4 pb-6" style="background:rgba(15,31,75,0.55);backdrop-filter:blur(3px);">
+  <div class="bg-white rounded-20px w-full max-w-sm overflow-hidden" style="border-radius:20px;">
+    <div class="p-5">
+      <p class="font-bold text-slate-800 text-base mb-1">Update KM Kendaraan</p>
+      <p class="text-sm text-slate-400 mb-4" id="kmModalHint">Terakhir: — km</p>
+      <div class="relative mb-1">
+        <input type="number" id="kmModalInput" placeholder="Masukkan KM baru…"
+          oninput="validateKmModal()"
+          style="border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 48px 12px 14px;font-size:15px;width:100%;font-family:'JetBrains Mono',monospace;font-weight:700;outline:none;">
+        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;color:#94A3B8;font-weight:600;">km</span>
+      </div>
+      <p id="kmModalErr" class="text-xs text-red-400 mb-3 hidden"></p>
+      <p class="text-xs text-slate-400 mb-4">Update KM <b>tidak</b> membuat catatan servis baru.</p>
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="closeKmModal()" class="btn-outline">Batal</button>
+        <button onclick="simpanKm()" id="btnSimpanKm" class="btn-primary" style="min-height:44px;">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: INVOICE DETAIL ══════════════ -->
+<div id="modalInvoice" class="hidden fixed inset-0 z-50 flex items-end justify-center px-0 pb-0" style="background:rgba(15,31,75,0.55);backdrop-filter:blur(3px);">
+  <div class="bg-white w-full max-w-lg overflow-y-auto" style="max-height:85vh;border-radius:20px 20px 0 0;">
+    <div class="sticky top-0 bg-white flex items-center justify-between px-5 py-4 border-b border-slate-100 z-10">
+      <p class="font-bold text-slate-800">Detail Invoice</p>
+      <button onclick="closeModal('modalInvoice')" class="text-slate-400 hover:text-slate-600 p-1">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="invoiceDetail" class="p-5"></div>
+  </div>
+</div>
+
+<!-- ══════════════ TOAST ══════════════ -->
+<div id="toast" class="toast"></div>
+
+<!-- ══════════════ SCRIPT ══════════════ -->
+<script>
+// ─── CONFIG ───────────────────────────────────────────
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyc-9p2v_OwoMvbDoIIPXO5rOIeJv_WaY2iJeGiB_aHgatogwohiTBVhzDzHDNOay1glg/exec';
+
+// ─── MOCK DATA ─────────────────────────────────────────
+const KENDARAAN = {
+  plat_nomor: 'L 2345 ABC',
+  merk: 'Honda', model: 'PCX 160', tahun: 2022,
+  warna: 'Putih Pearl', pemilik: 'Ayah',
+  km_awal: 0, km_terakhir: 12400,
+  tgl_update_km: '2025-05-10T08:30:00Z',
+  status: 'Aktif',
+};
+
+const JADWAL_PARTS = [
+  {id_part:'P001',nama_part:'Oli mesin',interval_km:2000,interval_hari:60,kategori:'Rutin',km_servis_terakhir:10800,tgl_servis_terakhir:'2025-03-01',status:'Terlambat'},
+  {id_part:'P002',nama_part:'Servis ringan',interval_km:2000,interval_hari:60,kategori:'Rutin',km_servis_terakhir:10800,tgl_servis_terakhir:'2025-03-01',status:'Terlambat'},
+  {id_part:'P003',nama_part:'Oli gardan',interval_km:8000,interval_hari:180,kategori:'Berkala',km_servis_terakhir:8000,tgl_servis_terakhir:'2024-11-01',status:'Segera'},
+  {id_part:'P004',nama_part:'Servis CVT',interval_km:8000,interval_hari:240,kategori:'Berkala',km_servis_terakhir:8000,tgl_servis_terakhir:'2024-11-01',status:'Aman'},
+  {id_part:'P005',nama_part:'Filter oli',interval_km:8000,interval_hari:180,kategori:'Berkala',km_servis_terakhir:4000,tgl_servis_terakhir:'2024-07-01',status:'Terlambat'},
+  {id_part:'P006',nama_part:'Busi',interval_km:8000,interval_hari:240,kategori:'Berkala',km_servis_terakhir:8000,tgl_servis_terakhir:'2024-11-01',status:'Aman'},
+  {id_part:'P007',nama_part:'Air radiator',interval_km:9000,interval_hari:365,kategori:'Berkala',km_servis_terakhir:4000,tgl_servis_terakhir:'2024-05-01',status:'Segera'},
+  {id_part:'P008',nama_part:'Filter udara',interval_km:12000,interval_hari:365,kategori:'Berkala',km_servis_terakhir:0,tgl_servis_terakhir:'2022-01-01',status:'Aman'},
+  {id_part:'P009',nama_part:'V-belt',interval_km:25000,interval_hari:730,kategori:'Berkala',km_servis_terakhir:0,tgl_servis_terakhir:'2022-01-01',status:'Aman'},
+  {id_part:'P010',nama_part:'Kampas rem',interval_km:null,interval_hari:null,kategori:'Kondisional',km_servis_terakhir:null,tgl_servis_terakhir:null,status:'Cek Kondisi'},
+  {id_part:'P011',nama_part:'Ban depan/belakang',interval_km:null,interval_hari:null,kategori:'Kondisional',km_servis_terakhir:null,tgl_servis_terakhir:null,status:'Cek Kondisi'},
+  {id_part:'P012',nama_part:'Oli shockbreaker',interval_km:10000,interval_hari:365,kategori:'Berkala',km_servis_terakhir:0,tgl_servis_terakhir:'2022-01-01',status:'Aman'},
+];
+
+const HISTORI = [
+  {
+    id_servis:'SR006', tanggal_servis:'2025-05-10', km_servis:12400,
+    bengkel:'Ahass Sumber Motor — Rungkut', total_biaya:155000,
+    perlu_followup:'Tidak', catatan_followup:'', catatan:'', input_oleh:'Ayah',
+    items:[
+      {nama_item:'Oli mesin',kategori_biaya:'Oli/Cairan',biaya:65000},
+      {nama_item:'Jasa servis',kategori_biaya:'Jasa',biaya:35000},
+      {nama_item:'Air radiator (cek)',kategori_biaya:'Jasa',biaya:10000},
+      {nama_item:'Filter udara (bersihkan)',kategori_biaya:'Jasa',biaya:15000},
+      {nama_item:'Kampas rem (cek)',kategori_biaya:'Jasa',biaya:30000},
+    ]
+  },
+  {
+    id_servis:'SR004', tanggal_servis:'2025-03-01', km_servis:10800,
+    bengkel:'Ahass Sumber Motor — Rungkut', total_biaya:215000,
+    perlu_followup:'Ya', catatan_followup:'Filter oli mulai kotor, ganti di servis berikutnya', catatan:'', input_oleh:'Bunda',
+    items:[
+      {nama_item:'Oli mesin',kategori_biaya:'Oli/Cairan',biaya:65000},
+      {nama_item:'Servis ringan',kategori_biaya:'Jasa',biaya:50000},
+      {nama_item:'Oli gardan',kategori_biaya:'Oli/Cairan',biaya:45000},
+      {nama_item:'Busi',kategori_biaya:'Sparepart',biaya:30000},
+      {nama_item:'Jasa pasang busi',kategori_biaya:'Jasa',biaya:25000},
+    ]
+  },
+  {
+    id_servis:'SR003', tanggal_servis:'2024-11-15', km_servis:8000,
+    bengkel:'Bengkel Pak Hendra — Waru', total_biaya:320000,
+    perlu_followup:'Tidak', catatan_followup:'', catatan:'Servis berkala 8000 km', input_oleh:'Ayah',
+    items:[
+      {nama_item:'Oli mesin',kategori_biaya:'Oli/Cairan',biaya:65000},
+      {nama_item:'Filter oli',kategori_biaya:'Sparepart',biaya:25000},
+      {nama_item:'Busi',kategori_biaya:'Sparepart',biaya:30000},
+      {nama_item:'Servis CVT',kategori_biaya:'Jasa',biaya:100000},
+      {nama_item:'Oli gardan',kategori_biaya:'Oli/Cairan',biaya:45000},
+      {nama_item:'Jasa servis berkala',kategori_biaya:'Jasa',biaya:55000},
+    ]
+  },
+  {
+    id_servis:'SR002', tanggal_servis:'2024-07-20', km_servis:6000,
+    bengkel:'Ahass Sumber Motor — Rungkut', total_biaya:100000,
+    perlu_followup:'Tidak', catatan_followup:'', catatan:'', input_oleh:'Ayah',
+    items:[
+      {nama_item:'Oli mesin',kategori_biaya:'Oli/Cairan',biaya:65000},
+      {nama_item:'Jasa ganti oli',kategori_biaya:'Jasa',biaya:20000},
+      {nama_item:'Servis ringan',kategori_biaya:'Jasa',biaya:15000},
+    ]
+  },
+  {
+    id_servis:'SR001', tanggal_servis:'2024-03-10', km_servis:3800,
+    bengkel:'Ahass Sumber Motor — Rungkut', total_biaya:88000,
+    perlu_followup:'Tidak', catatan_followup:'', catatan:'Servis perdana', input_oleh:'Ayah',
+    items:[
+      {nama_item:'Oli mesin',kategori_biaya:'Oli/Cairan',biaya:65000},
+      {nama_item:'Jasa ganti oli',kategori_biaya:'Jasa',biaya:23000},
+    ]
+  },
+];
+
+// ─── CURRENT TAB ───────────────────────────────────────
+let activeTab = 'info';
+let highlightTarget = null; // id_servis to highlight (from search nav)
+let allHistori = [...HISTORI];
+
+// ─── TAB SWITCH ────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+
+  if (tab==='info') renderInfo();
+  if (tab==='pengingat') renderPengingat();
+  if (tab==='histori') renderHistori(allHistori);
+}
+
+// ─── RENDER INFO ───────────────────────────────────────
+function renderInfo() {
+  const k = KENDARAAN;
+
+  // Hero
+  document.getElementById('heroMerk').textContent = k.merk;
+  document.getElementById('heroModel').textContent = k.model;
+  document.getElementById('heroPlat').textContent = k.plat_nomor;
+  document.getElementById('heroKm').textContent = k.km_terakhir.toLocaleString('id-ID');
+  document.getElementById('heroStatus').className = 'badge ' + (k.status==='Aktif'?'badge-aktif':'badge-jual');
+  document.getElementById('heroStatus').textContent = k.status;
+
+  // Stats
+  const byStatus = countStatus();
+  document.getElementById('statTerlambat').textContent = byStatus.Terlambat||0;
+  document.getElementById('statSegera').textContent = byStatus.Segera||0;
+  document.getElementById('statAman').textContent = byStatus.Aman||0;
+
+  // Info rows
+  const rows = [
+    ['Model', k.model], ['Merk', k.merk], ['Tahun', k.tahun],
+    ['Warna', k.warna], ['Pemilik', k.pemilik],
+    ['Kondisi', k.status], ['Plat Nomor', k.plat_nomor],
+  ];
+  document.getElementById('infoRows').innerHTML = rows.map(([l,v]) => `
+    <div class="info-row">
+      <span class="info-label">${l}</span>
+      <span class="info-value">${v}</span>
+    </div>
+  `).join('');
+
+  // Odometer
+  const jarak = k.km_terakhir - k.km_awal;
+  document.getElementById('infoKmTerakhir').textContent = k.km_terakhir.toLocaleString('id-ID') + ' km';
+  document.getElementById('infoKmAwal').textContent = k.km_awal.toLocaleString('id-ID') + ' km';
+  document.getElementById('infoJarak').textContent = jarak.toLocaleString('id-ID') + ' km';
+  document.getElementById('infoKmUpdate').textContent = k.tgl_update_km ? fmtDate(k.tgl_update_km) : '—';
+  document.getElementById('kmModalHint').textContent = `Terakhir: ${k.km_terakhir.toLocaleString('id-ID')} km`;
+}
+
+function countStatus() {
+  const r = {};
+  JADWAL_PARTS.forEach(p => { r[p.status] = (r[p.status]||0)+1; });
+  return r;
+}
+
+// ─── RENDER PENGINGAT ──────────────────────────────────
+function renderPengingat() {
+  // Stats hero
+  const byStatus = countStatus();
+  document.getElementById('statTerlambat').textContent = byStatus.Terlambat||0;
+  document.getElementById('statSegera').textContent = byStatus.Segera||0;
+  document.getElementById('statAman').textContent = byStatus.Aman||0;
+
+  // Rencana servis
+  const km = KENDARAAN.km_terakhir;
+  const groups = {
+    Wajib: JADWAL_PARTS.filter(p=>p.status==='Terlambat'),
+    Segera: JADWAL_PARTS.filter(p=>p.status==='Segera'),
+    Opsional: JADWAL_PARTS.filter(p=>p.status==='Aman' && p.interval_km && pctUsed(p,km)>75),
+    'Cek Kondisi': JADWAL_PARTS.filter(p=>p.status==='Cek Kondisi'),
+  };
+
+  const rencanaWrap = document.getElementById('rencanaWrap');
+  rencanaWrap.innerHTML = '';
+  const groupColors = {
+    Wajib:{bg:'#FEF2F2',hdr:'#FEE2E2',txt:'#B91C1C',dot:'#EF4444'},
+    Segera:{bg:'#FFFBEB',hdr:'#FEF9C3',txt:'#92400E',dot:'#F59E0B'},
+    Opsional:{bg:'#F8FAFC',hdr:'#F1F5F9',txt:'#475569',dot:'#94A3B8'},
+    'Cek Kondisi':{bg:'#EFF6FF',hdr:'#DBEAFE',txt:'#1D4ED8',dot:'#3B82F6'},
+  };
+
+  Object.entries(groups).forEach(([grp, parts]) => {
+    if (!parts.length) return;
+    const c = groupColors[grp];
+    const div = document.createElement('div');
+    div.className = 'rencana-group fade-up';
+    div.style.background = c.bg;
+    div.innerHTML = `
+      <div class="rencana-header" style="background:${c.hdr};color:${c.txt};">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c.dot};margin-right:6px;"></span>
+        ${grp} (${parts.length})
+      </div>
+      ${parts.map(p=>{
+        const km_brtnya = p.km_servis_terakhir!=null && p.interval_km ? p.km_servis_terakhir+p.interval_km : null;
+        return `
+        <div class="rencana-item">
+          <span style="font-size:13px;font-weight:600;color:#1E293B;">${p.nama_part}</span>
+          <span style="font-size:12px;color:${c.txt};font-weight:600;">
+            ${km_brtnya ? km_brtnya.toLocaleString('id-ID')+' km' : 'Cek fisik'}
+          </span>
+        </div>`;
+      }).join('')}
+    `;
+    rencanaWrap.appendChild(div);
+  });
+
+  // All parts
+  const allWrap = document.getElementById('allPartsWrap');
+  allWrap.innerHTML = '';
+  JADWAL_PARTS.forEach((p, i) => {
+    const pct = pctUsed(p, km);
+    const cfg = statusConfig(p.status);
+    const km_brtnya = p.km_servis_terakhir!=null && p.interval_km ? p.km_servis_terakhir+p.interval_km : null;
+    const sisa_km = km_brtnya ? km_brtnya - km : null;
+    const card = document.createElement('div');
+    card.className = `part-card fade-up ${p.status.toLowerCase().replace(' ','-')}`;
+    card.style.animationDelay = (i*0.04)+'s'; card.style.opacity=0;
+    card.innerHTML = `
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <p style="font-size:14px;font-weight:700;color:#1E293B;">${p.nama_part}</p>
+          <p style="font-size:11px;color:#94A3B8;margin-top:2px;">${p.kategori}${p.interval_km?` · ${p.interval_km.toLocaleString('id-ID')} km`:''}</p>
+        </div>
+        <span class="badge ${cfg.badgeClass}">${p.status}</span>
+      </div>
+      ${p.interval_km ? `
+      <div class="prog-wrap mb-2">
+        <div class="prog-fill" style="width:${Math.min(pct,100)}%;background:${cfg.color};"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#94A3B8;">
+        <span>${Math.round(pct)}% terpakai</span>
+        <span>${sisa_km!=null ? (sisa_km>=0?'Sisa '+sisa_km.toLocaleString('id-ID')+' km':'Lewat '+Math.abs(sisa_km).toLocaleString('id-ID')+' km') : '—'}</span>
+      </div>
+      ` : `<p style="font-size:12px;color:#64748B;">Pantau kondisi fisik secara berkala</p>`}
+      ${p.tgl_servis_terakhir ? `<p style="font-size:11px;color:#94A3B8;margin-top:6px;">Terakhir servis: ${fmtDateShort(p.tgl_servis_terakhir)}</p>` : ''}
+    `;
+    allWrap.appendChild(card);
+  });
+}
+
+function pctUsed(p, kmNow) {
+  if (!p.interval_km || p.km_servis_terakhir==null) return 0;
+  const km_brtnya = p.km_servis_terakhir + p.interval_km;
+  const done = kmNow - p.km_servis_terakhir;
+  return (done / p.interval_km) * 100;
+}
+
+function statusConfig(s) {
+  const map = {
+    Aman:       {color:'#22C55E',badgeClass:'badge-aman'},
+    Segera:     {color:'#F59E0B',badgeClass:'badge-segera'},
+    Terlambat:  {color:'#EF4444',badgeClass:'badge-terlambat'},
+    'Cek Kondisi':{color:'#3B82F6',badgeClass:'badge-cek'},
+    'Tidak Terpantau':{color:'#9CA3AF',badgeClass:'badge-tidak'},
+  };
+  return map[s]||map['Tidak Terpantau'];
+}
+
+// ─── RENDER HISTORI ────────────────────────────────────
+function renderHistori(data) {
+  // Summary
+  const totalBiaya = data.reduce((s,h)=>s+h.total_biaya,0);
+  const bengkelSet = new Set(data.map(h=>h.bengkel));
+  document.getElementById('histTotal').textContent = data.length;
+  document.getElementById('histBiaya').textContent = rp(totalBiaya);
+  document.getElementById('histBengkel').textContent = bengkelSet.size;
+
+  // Timeline
+  const wrap = document.getElementById('historiTimeline');
+  wrap.innerHTML = '';
+
+  if (!data.length) {
+    wrap.innerHTML = '<div class="text-center text-slate-400 py-8 text-sm">Belum ada histori servis</div>';
+    return;
+  }
+
+  data.forEach((h, idx) => {
+    const isLast = idx === data.length-1;
+    const hasFollowup = h.perlu_followup === 'Ya';
+    const div = document.createElement('div');
+    div.className = 'flex gap-3 fade-up';
+    div.style.animationDelay = (idx*0.06)+'s'; div.style.opacity=0;
+    div.id = 'hist-'+h.id_servis;
+    div.innerHTML = `
+      <!-- Timeline -->
+      <div class="flex flex-col items-center" style="width:20px;flex-shrink:0;margin-top:18px;">
+        <div class="timeline-dot" style="background:${hasFollowup?'#F97316':'#E8EEF6'};border:2px solid ${hasFollowup?'#FB923C':'#CBD5E1'};"></div>
+        ${!isLast ? '<div class="timeline-line flex-1 mt-1" style="min-height:40px;"></div>' : ''}
+      </div>
+      <!-- Card -->
+      <div class="invoice-card flex-1 mb-1 cursor-pointer" onclick="openInvoice('${h.id_servis}')">
+        <div class="invoice-header">
+          <div class="flex items-start justify-between">
+            <div>
+              <p style="font-size:15px;font-weight:700;color:#1E293B;">${fmtDate(h.tanggal_servis)}</p>
+              <p style="font-size:12px;color:#94A3B8;margin-top:2px;">${h.bengkel}</p>
+            </div>
+            <div class="text-right flex-shrink-0 ml-2">
+              <p style="font-size:15px;font-weight:700;color:var(--orange);">${rp(h.total_biaya)}</p>
+              <p style="font-size:11px;color:#94A3B8;margin-top:2px;" class="mono">${h.km_servis.toLocaleString('id-ID')} km</p>
+            </div>
+          </div>
+          ${hasFollowup ? `
+          <div class="mt-2 flex items-start gap-1.5 px-2.5 py-2 rounded-8px" style="background:#FFF7ED;border-radius:8px;">
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path stroke="#F97316" stroke-width="2" stroke-linecap="round" d="M8 10h8M8 14h5"/><rect stroke="#F97316" stroke-width="2" x="3" y="4" width="18" height="16" rx="3"/></svg>
+            <p style="font-size:11px;color:#C2410C;font-weight:600;">${h.catatan_followup||'Ada catatan tindak lanjut'}</p>
+          </div>` : ''}
+        </div>
+        <div class="invoice-items">
+          ${h.items.slice(0,3).map(it=>`
+            <div class="invoice-item-row">
+              <span style="color:#475569;">${it.nama_item}</span>
+              <span style="font-weight:600;color:#1E293B;">${rp(it.biaya)}</span>
+            </div>
+          `).join('')}
+          ${h.items.length>3 ? `<p style="font-size:12px;color:#94A3B8;padding-top:6px;">+${h.items.length-3} item lagi — tap untuk detail</p>` : ''}
+          <p style="font-size:11px;color:#B0B8C8;margin-top:4px;">Dicatat oleh: ${h.input_oleh}</p>
+        </div>
+      </div>
+    `;
+    wrap.appendChild(div);
+  });
+
+  // Highlight jika ada target dari Search
+  if (highlightTarget) {
+    setTimeout(()=>{
+      const el = document.getElementById('hist-'+highlightTarget);
+      if (el) {
+        el.scrollIntoView({behavior:'smooth', block:'center'});
+        const card = el.querySelector('.invoice-card');
+        card?.classList.add('highlighted','highlight-pulse');
+        setTimeout(()=>card?.classList.remove('highlighted','highlight-pulse'), 4000);
+      }
+      highlightTarget = null;
+    }, 400);
+  }
+}
+
+function filterHistori(q) {
+  if (!q.trim()) { renderHistori(allHistori); return; }
+  const qLow = q.toLowerCase();
+  const filtered = allHistori.filter(h =>
+    h.bengkel.toLowerCase().includes(qLow) ||
+    h.items.some(i=>i.nama_item.toLowerCase().includes(qLow)) ||
+    h.catatan_followup.toLowerCase().includes(qLow) ||
+    h.catatan.toLowerCase().includes(qLow)
+  );
+  renderHistori(filtered);
+}
+
+// ─── INVOICE MODAL ─────────────────────────────────────
+function openInvoice(id) {
+  const h = allHistori.find(x=>x.id_servis===id);
+  if (!h) return;
+  const detail = document.getElementById('invoiceDetail');
+  detail.innerHTML = `
+    <div class="space-y-4">
+      <!-- Header info -->
+      <div class="rounded-12px p-4" style="background:var(--bg);border-radius:12px;">
+        <div class="grid grid-cols-2 gap-3">
+          <div><p class="text-xs text-slate-400">Tanggal</p><p class="font-bold text-slate-800 text-sm mt-0.5">${fmtDate(h.tanggal_servis)}</p></div>
+          <div><p class="text-xs text-slate-400">KM Servis</p><p class="font-bold text-slate-800 text-sm mono mt-0.5">${h.km_servis.toLocaleString('id-ID')} km</p></div>
+          <div class="col-span-2"><p class="text-xs text-slate-400">Bengkel</p><p class="font-bold text-slate-800 text-sm mt-0.5">${h.bengkel}</p></div>
+          <div><p class="text-xs text-slate-400">Dicatat oleh</p><p class="font-bold text-slate-800 text-sm mt-0.5">${h.input_oleh}</p></div>
+          <div><p class="text-xs text-slate-400">ID Servis</p><p class="font-bold text-slate-400 text-xs mono mt-0.5">${h.id_servis}</p></div>
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div>
+        <p class="sec-title">Item Servis</p>
+        <div style="background:#fff;border:1.5px solid #E8EEF6;border-radius:12px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:1fr auto;padding:8px 14px;background:#F8FAFC;font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.06em;">
+            <span>Nama Item</span><span>Biaya</span>
+          </div>
+          ${h.items.map(it=>`
+            <div style="display:grid;grid-template-columns:1fr auto;padding:11px 14px;border-top:1px solid #F1F5F9;">
+              <div>
+                <p style="font-size:13px;font-weight:600;color:#1E293B;">${it.nama_item}</p>
+                <p style="font-size:11px;color:#94A3B8;">${it.kategori_biaya}</p>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:#1E293B;align-self:center;">${rp(it.biaya)}</span>
+            </div>
+          `).join('')}
+          <div style="display:grid;grid-template-columns:1fr auto;padding:12px 14px;background:#FFF4EF;border-top:2px solid #FED7BA;">
+            <span style="font-size:14px;font-weight:700;color:#C2410C;">Total</span>
+            <span style="font-size:16px;font-weight:800;color:var(--orange);">${rp(h.total_biaya)}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Follow-up -->
+      ${h.perlu_followup==='Ya' ? `
+      <div class="rounded-12px p-4" style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:12px;">
+        <div class="flex items-center gap-2 mb-2">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="#F97316" stroke-width="2" stroke-linecap="round" d="M8 10h8M8 14h5"/><rect stroke="#F97316" stroke-width="2" x="3" y="4" width="18" height="16" rx="3"/></svg>
+          <p style="font-size:12px;font-weight:700;color:#C2410C;">Catatan Tindak Lanjut</p>
+        </div>
+        <p style="font-size:13px;color:#9A3412;">${h.catatan_followup||'—'}</p>
+      </div>` : ''}
+
+      <!-- Catatan umum -->
+      ${h.catatan ? `
+      <div>
+        <p class="sec-title">Catatan Umum</p>
+        <p style="font-size:13px;color:#64748B;background:#F8FAFC;padding:12px;border-radius:10px;">${h.catatan}</p>
+      </div>` : ''}
+    </div>
+  `;
+  show('modalInvoice');
+}
+
+// ─── UPDATE KM MODAL ───────────────────────────────────
+function openUpdateKm() {
+  document.getElementById('kmModalInput').value = '';
+  hide('kmModalErr');
+  show('modalKm');
+  setTimeout(()=>document.getElementById('kmModalInput').focus(), 200);
+}
+function closeKmModal() { hide('modalKm'); }
+
+function validateKmModal() {
+  const val = parseInt(document.getElementById('kmModalInput').value)||0;
+  const km0 = KENDARAAN.km_terakhir;
+  const errEl = document.getElementById('kmModalErr');
+  const btn = document.getElementById('btnSimpanKm');
+  if (val && val < km0) {
+    errEl.textContent = `KM harus ≥ ${km0.toLocaleString('id-ID')} km`;
+    show('kmModalErr'); btn.disabled=true; btn.style.opacity='0.5';
+  } else {
+    hide('kmModalErr'); btn.disabled=false; btn.style.opacity='1';
+  }
+}
+
+async function simpanKm() {
+  const val = parseInt(document.getElementById('kmModalInput').value)||0;
+  if (!val || val < KENDARAAN.km_terakhir) return;
+
+  // Odometer warning
+  const selisih = val - KENDARAAN.km_terakhir;
+  if (selisih > Math.max(KENDARAAN.km_terakhir*0.2, 5000)) {
+    if (!confirm(`KM naik ${selisih.toLocaleString('id-ID')} km dari terakhir. Benar?`)) return;
+  }
+
+  try {
+    if (APPS_SCRIPT_URL && APPS_SCRIPT_URL!=='YOUR_APPS_SCRIPT_URL_HERE') {
+      await apiFetch('updateKm', {plat_nomor:KENDARAAN.plat_nomor, km_baru:val});
+    } else {
+      await sleep(800); // mock
+      KENDARAAN.km_terakhir = val;
+      KENDARAAN.tgl_update_km = new Date().toISOString();
+    }
+    hide('modalKm');
+    showToast('KM berhasil diupdate ✓');
+    renderInfo();
+    if (activeTab==='pengingat') renderPengingat();
+  } catch(e) { showToast('Gagal update KM'); }
+}
+
+// ─── HELPERS ───────────────────────────────────────────
+async function apiFetch(action, params={}) {
+  if (!APPS_SCRIPT_URL||APPS_SCRIPT_URL==='YOUR_APPS_SCRIPT_URL_HERE') return null;
+  const url = new URL(APPS_SCRIPT_URL);
+  url.searchParams.set('action',action);
+  Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
+  const r = await fetch(url); return (await r.json()).data;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+}
+function fmtDateShort(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+}
+function rp(n) { return 'Rp '+Math.floor(n||0).toLocaleString('id-ID'); }
+function show(id){document.getElementById(id)?.classList.remove('hidden');}
+function hide(id){document.getElementById(id)?.classList.add('hidden');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function closeModal(id){hide(id);}
+function navTo(p){showToast('→ '+p);}
+function openCatatServis(){showToast('→ Catat Servis');}
+function editKendaraan(){showToast('→ Edit Data Kendaraan (Admin)');}
+function ubahKondisi(){showToast('→ Ubah Kondisi (Admin)');}
+
+let _tt;
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show';
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// Close modal on overlay click
+['modalKm','modalInvoice'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('click',e=>{if(e.target.id===id)closeModal(id);});
+});
+
+// ─── ENTRY POINT ───────────────────────────────────────
+// URL param: ?tab=histori&highlight=SR004  (dari Search)
+function parseUrlParams() {
+  const p = new URLSearchParams(window.location.search);
+  const tab = p.get('tab')||'info';
+  highlightTarget = p.get('highlight')||null;
+  return tab;
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const startTab = parseUrlParams();
+  renderInfo();
+  switchTab(startTab);
+  // Show admin actions jika user adalah admin (mock: tampil)
+  document.getElementById('adminActions').classList.remove('hidden');
+});
+</script>
+</body>
+</html>
