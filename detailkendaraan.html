@@ -834,11 +834,21 @@ function show(id){document.getElementById(id)?.classList.remove('hidden');}
 function hide(id){document.getElementById(id)?.classList.add('hidden');}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function closeModal(id){hide(id);}
-function navTo(p){showToast('→ '+p);}
-function openCatatServis(){showToast('→ Catat Servis');}
-function editKendaraan(){showToast('→ Edit Data Kendaraan (Admin)');}
-function ubahKondisi(){showToast('→ Ubah Kondisi (Admin)');}
-
+function navTo(p){
+  const pages = {
+    home: 'dashboard.html',
+    servis: 'quickservice.html',
+    cari: 'searchlaporan.html',
+    laporan: 'searchlaporan.html',
+    admin: 'admin.html'
+  };
+  window.location.href = pages[p] || 'dashboard.html';
+}
+function openCatatServis(){
+  window.location.href = 'quickservice.html';
+}
+function editKendaraan(){showToast('Edit data kendaraan — buka menu Admin');}
+function ubahKondisi(){showToast('Ubah kondisi — buka menu Admin');}
 let _tt;
 function showToast(msg) {
   const el=document.getElementById('toast');
@@ -860,11 +870,30 @@ function parseUrlParams() {
   return tab;
 }
 
-document.addEventListener('DOMContentLoaded', ()=>{
+document.addEventListener('DOMContentLoaded', async ()=>{
   const startTab = parseUrlParams();
+  // Ambil plat dari URL param: ?plat=L%202345%20ABC
+  const urlPlat = new URLSearchParams(window.location.search).get('plat');
+  // Coba fetch data real dari API
+  if (APPS_SCRIPT_URL && APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+    try {
+      const [kRes, hRes] = await Promise.all([
+        apiFetch('getKendaraan'),
+        apiFetch('getHistoriServis', urlPlat ? {plat_nomor: urlPlat} : {}),
+      ]);
+      // Update KENDARAAN dari data real
+      const kList = kRes?.kendaraan || (Array.isArray(kRes) ? kRes : []);
+      const found = urlPlat ? kList.find(k => k.plat_nomor === urlPlat) : kList[0];
+      if (found) Object.assign(KENDARAAN, found);
+      // Update allHistori dari data real
+      const hList = hRes?.histori || (Array.isArray(hRes) ? hRes : []);
+      if (hList.length > 0) allHistori = hList;
+    } catch(e) {
+      console.warn('Gagal fetch data, pakai mock:', e);
+    }
+  }
   renderInfo();
   switchTab(startTab);
-  // Show admin actions jika user adalah admin (mock: tampil)
   document.getElementById('adminActions').classList.remove('hidden');
 });
 </script>

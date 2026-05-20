@@ -517,7 +517,7 @@ async function init() {
 
   try {
     const [u,k,b,j] = await Promise.all([
-      apiFetch('getUsers'), apiFetch('getKendaraanAktif'),
+      apiFetch('getUsers'), apiFetch('getKendaraan'),
       apiFetch('getBengkel'), apiFetch('getJadwalServis'),
     ]);
     S.users = u || MOCK_USERS;
@@ -934,7 +934,7 @@ async function doSave() {
   document.getElementById('btnSimpan').disabled = true;
 
   const payload = {
-    action: 'simpanServis',
+    action: 'addServis',
     plat_nomor: S.selKendaraan.plat_nomor,
     input_oleh: S.selUser.id_user,
     nama_input_oleh: S.selUser.nama_user,
@@ -1045,7 +1045,17 @@ function show(id) { document.getElementById(id)?.classList.remove('hidden'); }
 function hide(id) { document.getElementById(id)?.classList.add('hidden'); }
 function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 function closeModal(id) { hide(id); }
-function navTo(p) { showToast(`→ ${p}`, ''); }
+function navTo(p) {
+  const pages = {
+    home: 'dashboard.html',
+    servis: 'quickservice.html',
+    quick: 'quickservice.html',
+    cari: 'searchlaporan.html',
+    laporan: 'searchlaporan.html',
+    admin: 'admin.html'
+  };
+  window.location.href = pages[p] || 'dashboard.html';
+}
 
 let _toastTimer;
 function showToast(msg, cls='') {

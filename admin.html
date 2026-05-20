@@ -1062,7 +1062,7 @@ async function obStep2Next() {
 
 function obFinish() {
   localStorage.setItem(SETUP_KEY, '1');
-  window.location.href = 'dashboard';
+  window.location.href = 'dashboard.html';
 }
 
 // ── LOCK SCREEN ────────────────────────────────────────────────────
@@ -1148,8 +1148,7 @@ async function verifyPin() {
 }
 
 function goBackFromAdmin() {
-  // Navigate to dashboard (in a real app this would be window.location.href = 'garasi-idr-dashboard.html')
-  showToast('Kembali ke Dashboard');
+  window.location.href = 'dashboard.html';
 }
 
 // ── ADMIN DATA LOADING ─────────────────────────────────────────────
@@ -1585,18 +1584,15 @@ async function exportBackup() {
 
 // ── NAVIGATION ───────────────────────────────────────────────────
 function navTo(tab) {
-  // In production, these navigate to separate HTML pages
   const urls = {
-    home:    'garasi-idr-dashboard.html',
-    servis:  'garasi-idr-tahap4-quick-service.html',
-    cari:    'garasi-idr-tahap7-search-laporan.html',
-    laporan: 'garasi-idr-tahap7-search-laporan.html',
-    admin:   'garasi-idr-tahap8-admin-onboarding.html'
+    home:    'dashboard.html',
+    servis:  'quickservice.html',
+    cari:    'searchlaporan.html',
+    laporan: 'searchlaporan.html',
+    admin:   'admin.html'
   };
   if (tab === 'admin') return;
-  showToast(`Menuju ${tab === 'home' ? 'Dashboard' : tab === 'servis' ? 'Catat Servis' : tab === 'cari' ? 'Pencarian' : 'Laporan'}...`);
-  // Uncomment to enable actual navigation:
-  // if (urls[tab]) window.location.href = urls[tab];
+  if (urls[tab]) window.location.href = urls[tab];
 }
 
 // ── API HELPERS ──────────────────────────────────────────────────

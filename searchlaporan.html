@@ -1143,8 +1143,13 @@ function show(id){document.getElementById(id)?.classList.remove('hidden');}
 function hide(id){document.getElementById(id)?.classList.add('hidden');}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function closeModal(id){hide(id);}
-function navTo(p){showToast('→ '+p);}
-function navToKendaraan(plat,tab='info'){showToast(`→ Detail ${plat} [${tab}]`);}
+function navTo(p){
+  const pages={home:'dashboard.html',servis:'quickservice.html',cari:'searchlaporan.html',laporan:'searchlaporan.html',admin:'admin.html'};
+  window.location.href=pages[p]||'dashboard.html';
+}
+function navToKendaraan(plat,tab='info'){
+  window.location.href=`detailkendaraan.html?plat=${encodeURIComponent(plat)}&tab=${tab}`;
+}
 
 let _tt;
 function showToast(msg,type=''){
