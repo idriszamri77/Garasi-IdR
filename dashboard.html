@@ -976,42 +976,77 @@ function loadDemoData() {
   renderDashboard();
 }
 
-// ── FETCH (production mode) ──────────────────────────────────────────
 async function fetchDashboard() {
+  // Tampilkan cache dulu kalau ada
+  const cached = localStorage.getItem('garasi_dashboard_cache');
+  if (cached) {
+    try {
+      const d = JSON.parse(cached);
+      state.kendaraan = d.kendaraan || [];
+      const pengingatMap = {};
+      (d.kendaraan || []).forEach(k => {
+        if (k.pengingat) {
+          pengingatMap[k.plat_nomor] = k.pengingat.map(p => ({
+            nama_part: p.nama_part,
+            status: p.status,
+            sisa_km: p.km_berikutnya ? p.km_berikutnya - k.km_terakhir : null,
+            sisa_hari: null
+          }));
+        }
+      });
+      state.pengingat = pengingatMap;
+      state.followup = d.followup || [];
+      state.biayaBulan = d.biayaBulan || 0;
+      if (d.kartu) {
+        document.getElementById('cntTerlambat').textContent = d.kartu.terlambat_servis || 0;
+        document.getElementById('cntSegera').textContent = d.kartu.segera_servis || 0;
+        document.getElementById('cntCek').textContent = d.kartu.cek_kondisi || 0;
+        document.getElementById('totalBiaya').textContent = formatRp(d.kartu.total_biaya_bulan || 0);
+      }
+      renderDashboard();
+      hideLoading(); // Langsung tampil dari cache!
+    } catch(e) {}
+  }
+
+  // Fetch data baru di background
   try {
-   
-const res = await fetch(`${SCRIPT_URL}?action=getDashboard`);
+    const res = await fetch(`${SCRIPT_URL}?action=getDashboard`);
     const data = await res.json();
     if (!data.success) throw new Error(data.message || 'Gagal load data');
 
+    // Simpan ke cache
+    localStorage.setItem('garasi_dashboard_cache', JSON.stringify(data.data));
+
     const d = data.data || {};
-state.kendaraan  = d.kendaraan  || [];
-const pengingatMap = {};
-(d.kendaraan || []).forEach(k => {
-  if (k.pengingat) {
-    pengingatMap[k.plat_nomor] = k.pengingat.map(p => ({
-      nama_part: p.nama_part,
-      status: p.status,
-      sisa_km: p.km_berikutnya ? p.km_berikutnya - k.km_terakhir : null,
-      sisa_hari: null
-    }));
-  }
-});
-state.pengingat = pengingatMap;
-state.followup   = d.followup   || [];
-state.biayaBulan = d.biayaBulan || 0;
-if (d.kartu) {
-  document.getElementById('cntTerlambat').textContent = d.kartu.terlambat_servis || 0;
-  document.getElementById('cntSegera').textContent = d.kartu.segera_servis || 0;
-  document.getElementById('cntCek').textContent = d.kartu.cek_kondisi || 0;
-  document.getElementById('totalBiaya').textContent = formatRp(d.kartu.total_biaya_bulan || 0);
-}
+    state.kendaraan = d.kendaraan || [];
+    const pengingatMap = {};
+    (d.kendaraan || []).forEach(k => {
+      if (k.pengingat) {
+        pengingatMap[k.plat_nomor] = k.pengingat.map(p => ({
+          nama_part: p.nama_part,
+          status: p.status,
+          sisa_km: p.km_berikutnya ? p.km_berikutnya - k.km_terakhir : null,
+          sisa_hari: null
+        }));
+      }
+    });
+    state.pengingat = pengingatMap;
+    state.followup = d.followup || [];
+    state.biayaBulan = d.biayaBulan || 0;
+    if (d.kartu) {
+      document.getElementById('cntTerlambat').textContent = d.kartu.terlambat_servis || 0;
+      document.getElementById('cntSegera').textContent = d.kartu.segera_servis || 0;
+      document.getElementById('cntCek').textContent = d.kartu.cek_kondisi || 0;
+      document.getElementById('totalBiaya').textContent = formatRp(d.kartu.total_biaya_bulan || 0);
+    }
     renderDashboard();
     hideLoading();
   } catch (err) {
     console.error(err);
-    showToast('Gagal memuat data. Coba lagi.');
-    hideLoading();
+    if (!cached) {
+      showToast('Gagal memuat data. Coba lagi.');
+      hideLoading();
+    }
   }
 }
 
