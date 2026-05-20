@@ -521,7 +521,7 @@ async function fetchAll() {
     // Fetch users
     const [usersRes, kendaraanRes, bengkelRes, jadwalRes] = await Promise.all([
       apiFetch('getUsers'),
-      apiFetch('getKendaraanAktif'),
+      apiFetch('getKendaraan'),
       apiFetch('getBengkel'),
       apiFetch('getJadwalServis'),
     ]);
