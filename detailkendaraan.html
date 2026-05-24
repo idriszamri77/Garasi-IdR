@@ -6,7 +6,7 @@
 <title>Garasi IdR — Detail Kendaraan</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --orange:#F05E0E; --navy:#0F1F4B; --navy2:#162660;
@@ -15,7 +15,11 @@
   --bg:#EEF2F8;
 }
 *{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}
-html,body{background:var(--bg);font-family:'Outfit',sans-serif;color:#1E293B;overscroll-behavior:none;height:100%;}
+html{background:#D9DFE8;}
+body{background:transparent;font-family:'Plus Jakarta Sans',sans-serif;color:#1E293B;overscroll-behavior:none;height:100%;margin:0;}
+
+/* ── MOBILE WRAPPER ── */
+.app-wrap{max-width:430px;margin:0 auto;min-height:100dvh;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow-x:hidden;}
 .mono{font-family:'JetBrains Mono',monospace;}
 
 /* ── Header hero ── */
@@ -113,7 +117,8 @@ html,body{background:var(--bg);font-family:'Outfit',sans-serif;color:#1E293B;ove
 .sec-title{font-size:11px;font-weight:700;color:#94A3B8;letter-spacing:0.08em;text-transform:uppercase;padding:0 2px;margin-bottom:10px;}
 </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body>
+<div class="app-wrap">
 
 <!-- ══════════════ HERO HEADER ══════════════ -->
 <div class="hero pt-safe" id="heroSection">
@@ -293,7 +298,7 @@ html,body{background:var(--bg);font-family:'Outfit',sans-serif;color:#1E293B;ove
 </div><!-- /panelWrap -->
 
 <!-- ══════════════ BOTTOM NAV ══════════════ -->
-<nav class="bottom-nav fixed bottom-0 left-0 right-0 z-40 flex">
+<nav class="bottom-nav fixed bottom-0 z-40 flex" style="left:50%;transform:translateX(-50%);width:100%;max-width:430px;">
   <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#E8622A;" onclick="navTo('home')">
     <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1V10z"/><path stroke="currentColor" stroke-width="2" d="M9 21V12h6v9"/></svg>
     <span style="font-size:10px;font-weight:600;color:#E8622A;">Home</span>
@@ -898,5 +903,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   document.getElementById('adminActions').classList.remove('hidden');
 });
 </script>
+</div><!-- /app-wrap -->
 </body>
 </html>

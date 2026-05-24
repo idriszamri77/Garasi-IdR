@@ -6,6 +6,8 @@
 <title>Garasi IdR — Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/locale/id.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
   /* ── RESET & BASE ───────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,7 +34,7 @@
     --radius:   12px;
     --radius-sm:8px;
 
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   }
 
   html, body {
@@ -163,9 +165,11 @@
     display: block;
   }
   .alert-card .ac-num {
-    font-size: 28px;
-    font-weight: 700;
+    font-family: 'Syne', system-ui, sans-serif;
+    font-size: 32px;
+    font-weight: 800;
     line-height: 1;
+    letter-spacing: -0.5px;
     color: var(--text);
   }
   .alert-card.red    .ac-num { color: var(--red); }
@@ -877,6 +881,7 @@ const DEMO_MODE = false;
 // ── STATE ────────────────────────────────────────────────────────────
 let state = {
   activeUser: null,       // { id_user, nama_user, role }
+  users: [],              // daftar users dari backend
   kendaraan: [],
   pengingat: {},          // { plat: [{ nama_part, status, sisa_km, sisa_hari }] }
   histori: [],            // recent servis
@@ -1366,13 +1371,40 @@ async function saveKm() {
 }
 
 // ── USER PICKER ───────────────────────────────────────────────────────
-function openUserPicker() {
-  const users = DEMO_MODE ? demoData.users : (state.users || []);
-  const list  = document.getElementById('userList');
+async function openUserPicker() {
+  document.getElementById('userPopup').classList.add('open');
+  const list = document.getElementById('userList');
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sm);font-size:13px;">Memuat...</div>';
 
-  list.innerHTML = users
-    .filter(u => u.status === 'Aktif')
-    .map(u => `
+  let users = [];
+
+  if (DEMO_MODE) {
+    users = demoData.users;
+  } else if (state.users && state.users.length > 0) {
+    users = state.users;
+  } else {
+    try {
+      const res = await fetch(`${SCRIPT_URL}?action=getUsers`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        state.users = data.data;
+        users = state.users;
+      }
+    } catch(e) { /* gagal fetch */ }
+  }
+
+  const active = (users || []).filter(u => u.status === 'Aktif');
+
+  if (!active.length) {
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-sm);font-size:13px;line-height:1.6;">
+      <div style="font-size:28px;margin-bottom:8px;">👤</div>
+      Belum ada anggota terdaftar.<br>
+      <span style="color:var(--orange);font-weight:600;">Tambah via Admin → Anggota</span>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = active.map(u => `
     <div class="user-option" onclick="selectUser('${u.id_user}', '${u.nama_user}', '${u.role}')">
       <div class="user-avatar">${u.nama_user[0]}</div>
       <div class="user-info">
@@ -1380,8 +1412,6 @@ function openUserPicker() {
         <div class="u-role">${u.role}</div>
       </div>
     </div>`).join('');
-
-  document.getElementById('userPopup').classList.add('open');
 }
 
 function selectUser(id, nama, role) {

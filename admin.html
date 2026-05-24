@@ -853,17 +853,41 @@ let editTarget     = null; // for delete confirmation
 let confirmCb      = null; // callback for confirm modal
 
 // ── INIT ──────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  const setupDone = localStorage.getItem(SETUP_KEY);
-  const savedPin  = localStorage.getItem(PIN_KEY);
+document.addEventListener('DOMContentLoaded', async () => {
+  const savedPin = localStorage.getItem(PIN_KEY);
 
-  if (!setupDone || !savedPin) {
-    // First time — show onboarding
-    showOnboarding();
-  } else {
-    // Show lock screen for PIN verification
+  if (savedPin) {
+    // PIN sudah tersimpan di perangkat ini — langsung ke lock screen
     lockPinLength = savedPin.length;
     showLockScreen();
+    return;
+  }
+
+  // Tidak ada PIN lokal — cek backend apakah sudah ada setup
+  // Jika SCRIPT_URL belum dikonfigurasi, langsung onboarding
+  if (!SCRIPT_URL || SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) {
+    showOnboarding();
+    return;
+  }
+
+  // Tampilkan lock screen sementara sambil cek backend
+  showLockScreen();
+  document.getElementById('lockError').textContent = 'Memeriksa status...';
+
+  try {
+    const result = await apiGet('getUsers');
+    if (result.success && result.data && result.data.length > 0) {
+      // Ada data users → sistem sudah pernah di-setup di perangkat lain
+      // Tampilkan pesan meminta PIN dari admin
+      document.getElementById('lockError').textContent = 'Masukkan PIN admin untuk melanjutkan';
+    } else {
+      // Belum ada users → setup pertama kali
+      showOnboarding();
+    }
+  } catch(e) {
+    // Gagal cek backend — tampilkan onboarding sebagai fallback
+    document.getElementById('lockError').textContent = '';
+    showOnboarding();
   }
 });
 

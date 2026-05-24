@@ -14,7 +14,11 @@
   --bg:#EEF2F8;--card:#fff;
 }
 *{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}
-html,body{background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;color:#1E293B;overscroll-behavior:none;}
+html{background:#D9DFE8;}
+body{background:transparent;font-family:'Plus Jakarta Sans',sans-serif;color:#1E293B;overscroll-behavior:none;margin:0;}
+
+/* ── MOBILE WRAPPER ── */
+.app-wrap{max-width:430px;margin:0 auto;min-height:100dvh;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow-x:hidden;}
 .display{font-family:'Syne',sans-serif;}
 .mono{font-family:'JetBrains Mono',monospace;}
 
@@ -59,8 +63,8 @@ html,body{background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;color:
 
 /* ── Laporan stat cards ── */
 .stat-card{background:#fff;border-radius:14px;padding:16px;border:1.5px solid #E8EEF6;}
-.stat-big{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--orange);}
-.stat-label{font-size:11px;color:#94A3B8;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+.stat-big{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--orange);line-height:1.1;letter-spacing:-0.5px;}
+.stat-label{font-size:11px;color:#94A3B8;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;}
 
 /* ── Bar chart ── */
 .bar-chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -118,7 +122,8 @@ canvas{display:block;}
 ::-webkit-scrollbar-thumb{background:#E2E8F0;border-radius:3px;}
 </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body>
+<div class="app-wrap">
 
 <!-- ══════════════ TOP HEADER ══════════════ -->
 <div style="background:var(--navy);">
@@ -308,7 +313,7 @@ canvas{display:block;}
 </div><!-- /pageLaporan -->
 
 <!-- ══════════════ BOTTOM NAV ══════════════ -->
-<nav class="bottom-nav fixed bottom-0 left-0 right-0 z-40 flex">
+<nav class="bottom-nav fixed bottom-0 z-40 flex" style="left:50%;transform:translateX(-50%);width:100%;max-width:430px;">
   <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('home')">
     <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1V10z"/><path stroke="currentColor" stroke-width="2" d="M9 21V12h6v9"/></svg>
     <span style="font-size:10px;font-weight:500;">Home</span>
@@ -422,8 +427,23 @@ canvas{display:block;}
   </div>
 </div>
 
+<!-- ══════════════ MODAL: DETAIL KENDARAAN ══════════════ -->
+<div id="modalKendaraan" class="hidden fixed inset-0 z-50 modal-bg">
+  <div class="modal-sheet" style="max-height:90vh;overflow-y:auto;">
+    <div class="sticky top-0 bg-white flex items-center justify-between px-5 py-4 border-b border-slate-100 z-10">
+      <p class="font-bold text-slate-800" id="kendaraanModalTitle">Detail Kendaraan</p>
+      <button onclick="closeModal('modalKendaraan')" class="text-slate-400 p-1">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="kendaraanModalBody" class="p-5 space-y-4"></div>
+  </div>
+</div>
+
 <!-- ══════════════ TOAST ══════════════ -->
 <div id="toast" class="toast"></div>
+
+</div><!-- /app-wrap -->
 
 <!-- ══════════════ SCRIPT ══════════════ -->
 <script>
@@ -1153,8 +1173,84 @@ function navTo(p){
   window.location.href=pages[p]||'dashboard.html';
 }
 function navToKendaraan(plat,tab='info'){
-  window.location.href=`detailkendaraan.html?plat=${encodeURIComponent(plat)}&tab=${tab}`;
+  const k = ALL_KENDARAAN.find(x=>x.plat_nomor===plat);
+  if (!k) return;
+  const histori = ALL_HISTORI.filter(h=>h.plat===plat).sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
+  const jadwal = ALL_JADWAL.find(j=>j.plat===plat);
+  const last = histori[0];
+
+  document.getElementById('kendaraanModalTitle').textContent = `${k.merk} ${k.model}`;
+
+  const urgentParts = jadwal ? jadwal.parts.filter(p=>p.status==='Terlambat'||p.status==='Segera') : [];
+  const statusColors = {Terlambat:'#B91C1C',Segera:'#92400E',Aman:'#15803D','Cek Kondisi':'#1D4ED8'};
+  const statusBgs = {Terlambat:'#FEE2E2',Segera:'#FEF9C3',Aman:'#DCFCE7','Cek Kondisi':'#DBEAFE'};
+
+  document.getElementById('kendaraanModalBody').innerHTML = `
+    <!-- Info kendaraan -->
+    <div style="background:linear-gradient(135deg,var(--navy),#1a3580);border-radius:14px;padding:16px 18px;">
+      <p style="color:rgba(255,255,255,.5);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;">Kendaraan</p>
+      <p style="color:#fff;font-size:18px;font-weight:700;margin-top:4px;">${k.merk} ${k.model} <span style="font-weight:400;font-size:14px;opacity:.6;">${k.tahun}</span></p>
+      <p style="color:rgba(255,255,255,.55);font-size:13px;margin-top:2px;font-family:'JetBrains Mono',monospace;">${k.plat_nomor} · ${k.pemilik}</p>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1);">
+        <div><p style="color:rgba(255,255,255,.5);font-size:11px;">KM Terakhir</p><p style="color:#fff;font-size:16px;font-weight:700;">${k.km_terakhir.toLocaleString('id-ID')} <span style="font-size:11px;font-weight:400;opacity:.6;">km</span></p></div>
+        <div><p style="color:rgba(255,255,255,.5);font-size:11px;">Status</p><p style="color:#4ADE80;font-size:13px;font-weight:600;">${k.status}</p></div>
+      </div>
+    </div>
+
+    <!-- Jadwal status -->
+    ${urgentParts.length ? `
+    <div>
+      <p class="sec">⚠️ Perlu Perhatian</p>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${urgentParts.map(p=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;background:${statusBgs[p.status]};border-radius:10px;padding:10px 14px;">
+            <span style="font-size:13px;font-weight:600;color:${statusColors[p.status]};">${p.nama}</span>
+            <span style="font-size:11px;font-weight:700;color:${statusColors[p.status]};">${p.status}</span>
+          </div>`).join('')}
+      </div>
+    </div>` : jadwal ? `<div style="background:#DCFCE7;border-radius:10px;padding:12px 14px;font-size:13px;font-weight:600;color:#15803D;">✅ Semua jadwal servis dalam kondisi aman</div>` : ''}
+
+    <!-- Servis terakhir -->
+    ${last ? `
+    <div>
+      <p class="sec">Servis Terakhir</p>
+      <div style="background:#F8FAFC;border-radius:12px;border:1.5px solid #E8EEF6;overflow:hidden;">
+        <div style="padding:12px 14px;border-bottom:1px solid #F1F5F9;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;font-weight:600;color:#1E293B;">${fmtDate(last.tanggal)}</span>
+            <span style="font-size:14px;font-weight:700;color:var(--orange);">${rp(last.total)}</span>
+          </div>
+          <p style="font-size:12px;color:#94A3B8;margin-top:2px;">${last.bengkel}</p>
+        </div>
+        ${last.items.slice(0,3).map(i=>`
+          <div style="display:flex;justify-content:space-between;padding:8px 14px;border-bottom:1px solid #F8FAFC;font-size:12px;">
+            <span style="color:#475569;">${i.nama}</span>
+            <span style="font-weight:600;color:#1E293B;">${rp(i.biaya)}</span>
+          </div>`).join('')}
+        ${last.items.length>3?`<p style="font-size:11px;color:#94A3B8;padding:6px 14px;">+${last.items.length-3} item lagi</p>`:''}
+      </div>
+    </div>` : '<p style="text-align:center;color:#94A3B8;font-size:13px;padding:16px;">Belum ada riwayat servis</p>'}
+
+    <!-- Histori count -->
+    ${histori.length > 1 ? `<p style="text-align:center;font-size:12px;color:#94A3B8;">${histori.length} total servis tercatat</p>` : ''}
+
+    <!-- Tombol aksi -->
+    <div style="display:flex;gap:10px;padding-top:4px;">
+      <button onclick="closeModal('modalKendaraan');navTo('servis');" class="btn-primary" style="flex:1;">
+        🔧 Catat Servis
+      </button>
+    </div>
+  `;
+
+  show('modalKendaraan');
 }
+
+// Close kendaraan modal on bg tap
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('modalKendaraan')?.addEventListener('click', e => {
+    if (e.target.id === 'modalKendaraan') closeModal('modalKendaraan');
+  });
+});
 
 let _tt;
 function showToast(msg,type=''){

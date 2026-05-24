@@ -6,7 +6,7 @@
 <title>Garasi IdR — Catat Servis</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --orange: #F05E0E;
@@ -16,10 +16,29 @@
     --red: #EF4444;
     --blue: #3B82F6;
     --gray: #9CA3AF;
+    --bg: #F1F5F9;
   }
 
   * { -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F8FAFC; }
+  html { background: #E8EDF3; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: transparent; margin: 0; }
+
+  /* ── MOBILE WRAPPER ── */
+  .app-wrap {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ── MODE TOGGLE ── */
+  .mode-toggle { display:flex; background:#E2E8F0; border-radius:10px; padding:3px; gap:3px; }
+  .mode-btn { flex:1; padding:9px 12px; border-radius:8px; border:none; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; background:transparent; color:#64748B; font-family:'Plus Jakarta Sans',sans-serif; }
+  .mode-btn.active { background:#fff; color:var(--navy); box-shadow:0 1px 4px rgba(0,0,0,.10); }
 
   .font-display { font-family: 'Syne', sans-serif; }
 
@@ -116,7 +135,8 @@
   ::-webkit-scrollbar { display: none; }
 </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
+<div class="app-wrap">
 
 <!-- ===================== HEADER ===================== -->
 <div class="sticky top-0 z-40" style="background: var(--navy); height: 56px;">
@@ -140,8 +160,14 @@
   <!-- ========== STEP 1: USER + KENDARAAN ========== -->
   <div id="step1" class="px-4 pt-5 space-y-4">
 
+    <!-- Mode Toggle -->
+    <div class="mode-toggle" id="modeToggle">
+      <button class="mode-btn active" id="modeQuick" onclick="setMode('quick')">⚡ Mode Cepat</button>
+      <button class="mode-btn" id="modeLengkap" onclick="setMode('lengkap')">📋 Mode Lengkap</button>
+    </div>
+    <p class="text-xs text-gray-400 -mt-1 px-1" id="modeDesc">Gunakan template servis siap pakai</p>
+
     <div>
-      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Langkah 1 dari 3</p>
       <h2 class="font-display text-xl font-bold text-gray-800">Siapa yang mencatat?</h2>
       <p class="text-sm text-gray-500 mt-1">Pilih nama kamu dan kendaraan yang diservis.</p>
     </div>
@@ -176,10 +202,6 @@
       <svg class="inline ml-2" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
 
-    <!-- Link ke Full Form -->
-    <div class="text-center pb-2">
-      <button onclick="showFullFormHint()" class="text-sm text-gray-400 underline underline-offset-2">Perlu form lebih lengkap?</button>
-    </div>
   </div>
 
   <!-- ========== STEP 2: TEMPLATE ========== -->
@@ -359,7 +381,7 @@
 </div>
 
 <!-- ===================== BOTTOM NAV ===================== -->
-<nav class="bottom-nav fixed bottom-0 left-0 right-0 z-40 flex items-stretch">
+<nav class="bottom-nav fixed bottom-0 z-40 flex items-stretch" style="left:50%;transform:translateX(-50%);width:100%;max-width:430px;">
   <a href="dashboard.html" class="flex-1 flex flex-col items-center justify-center gap-0.5 nav-icon inactive">
     <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-7 9 7v10a1 1 0 01-1 1H4a1 1 0 01-1-1V10z"/><path stroke="currentColor" stroke-width="2" d="M9 21V12h6v9"/></svg>
     <span class="text-[10px] font-medium">Home</span>
@@ -435,8 +457,28 @@
 <!-- ===================== TOAST ===================== -->
 <div id="toast" class="toast"></div>
 
+</div><!-- /app-wrap -->
+
 <!-- ===================== SCRIPT ===================== -->
 <script>
+// ============================================================
+// MODE — Cepat (template) vs Lengkap (manual)
+// ============================================================
+let serviceMode = 'quick';
+
+function setMode(mode) {
+  serviceMode = mode;
+  document.getElementById('modeQuick').classList.toggle('active', mode === 'quick');
+  document.getElementById('modeLengkap').classList.toggle('active', mode === 'lengkap');
+  document.getElementById('modeDesc').textContent = mode === 'quick'
+    ? 'Gunakan template servis siap pakai'
+    : 'Input semua detail servis secara manual';
+  const btn = document.getElementById('btnStep1Next');
+  btn.innerHTML = mode === 'quick'
+    ? 'Lanjut Pilih Template <svg class="inline ml-2" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M5 12h14M12 5l7 7-7 7"/></svg>'
+    : 'Lanjut Isi Detail <svg class="inline ml-2" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M5 12h14M12 5l7 7-7 7"/></svg>';
+}
+
 // ============================================================
 // CONFIG — Ganti APPS_SCRIPT_URL dengan URL Web App kamu
 // ============================================================
@@ -934,11 +976,18 @@ function goToStep1() {
 }
 
 function goToStep2() {
-  // Validasi step 1
   if (!state.selectedUser) { showToast('Pilih nama kamu dulu ya', 'error'); return; }
   if (!state.selectedKendaraan) { showToast('Pilih kendaraan dulu', 'error'); return; }
-  setStep(2);
-  renderStep2();
+  if (serviceMode === 'lengkap') {
+    // Mode Lengkap: skip template, langsung ke detail dengan item kosong
+    state.selectedTemplate = 'custom';
+    state.items = [createEmptyItem()];
+    setStep(3);
+    renderStep3();
+  } else {
+    setStep(2);
+    renderStep2();
+  }
 }
 
 function goToStep3() {
@@ -1130,8 +1179,8 @@ function navTo(page) {
 }
 
 function showFullFormHint() {
-  const plat = state.selectedKendaraan?.plat_nomor || '';
-  window.location.href = 'fullform.html' + (plat ? '?plat=' + encodeURIComponent(plat) : '');
+  setMode('lengkap');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ============================================================
@@ -1163,6 +1212,9 @@ document.getElementById('modalOdometer').addEventListener('click', function(e) {
 // BOOT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  // Check URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('mode') === 'lengkap') setMode('lengkap');
   setStep(1);
   fetchAll();
 });
