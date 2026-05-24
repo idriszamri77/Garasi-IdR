@@ -532,6 +532,12 @@ async function init() {
   renderKendaraan();
   renderBengkel();
   renderJadwalList('');
+  // Auto-select kendaraan if ?plat= param is present in URL
+  const urlPlat = new URLSearchParams(window.location.search).get('plat');
+  if (urlPlat) {
+    const found = S.kendaraan.find(k => k.plat_nomor === urlPlat);
+    if (found) pickKendaraan(found);
+  }
 }
 
 async function apiFetch(action) {
@@ -936,7 +942,7 @@ async function doSave() {
   const payload = {
     action: 'addServis',
     plat_nomor: S.selKendaraan.plat_nomor,
-    input_oleh: S.selUser.id_user,
+    input_oleh: S.selUser.nama_user,
     nama_input_oleh: S.selUser.nama_user,
     tanggal_servis: tanggal,
     km_servis: km,
@@ -1050,8 +1056,8 @@ function navTo(p) {
     home: 'dashboard.html',
     servis: 'quickservice.html',
     quick: 'quickservice.html',
-    cari: 'searchlaporan.html',
-    laporan: 'searchlaporan.html',
+    cari: 'searchlaporan.html?page=cari',
+    laporan: 'searchlaporan.html?page=laporan',
     admin: 'admin.html'
   };
   window.location.href = pages[p] || 'dashboard.html';

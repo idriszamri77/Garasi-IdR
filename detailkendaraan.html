@@ -798,7 +798,7 @@ async function simpanKm() {
 
   try {
     if (APPS_SCRIPT_URL && APPS_SCRIPT_URL!=='YOUR_APPS_SCRIPT_URL_HERE') {
-      await apiFetch('updateKm', {plat_nomor:KENDARAAN.plat_nomor, km_baru:val});
+      await apiFetch('updateKM', {plat_nomor:KENDARAAN.plat_nomor, km_baru:val});
     } else {
       await sleep(800); // mock
       KENDARAAN.km_terakhir = val;
@@ -838,14 +838,15 @@ function navTo(p){
   const pages = {
     home: 'dashboard.html',
     servis: 'quickservice.html',
-    cari: 'searchlaporan.html',
-    laporan: 'searchlaporan.html',
+    cari: 'searchlaporan.html?page=cari',
+    laporan: 'searchlaporan.html?page=laporan',
     admin: 'admin.html'
   };
   window.location.href = pages[p] || 'dashboard.html';
 }
 function openCatatServis(){
-  window.location.href = 'quickservice.html';
+  const plat = KENDARAAN.plat_nomor || new URLSearchParams(window.location.search).get('plat') || '';
+  window.location.href = 'quickservice.html' + (plat ? '?plat=' + encodeURIComponent(plat) : '');
 }
 function editKendaraan(){showToast('Edit data kendaraan — buka menu Admin');}
 function ubahKondisi(){showToast('Ubah kondisi — buka menu Admin');}

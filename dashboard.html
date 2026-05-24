@@ -808,19 +808,19 @@
       <div class="nav-icon">🏠</div>
       <div class="nav-label">Home</div>
     </div>
-    <div class="nav-item" data-tab="servis" onclick="window.location.href='quickservice'">
+    <div class="nav-item" data-tab="servis" onclick="window.location.href='quickservice.html'">
       <div class="nav-icon">🔧</div>
       <div class="nav-label">Servis</div>
     </div>
-    <div class="nav-item" data-tab="cari" onclick="window.location.href='searchlaporan'">
+    <div class="nav-item" data-tab="cari" onclick="window.location.href='searchlaporan.html?page=cari'">
       <div class="nav-icon">🔍</div>
       <div class="nav-label">Cari</div>
     </div>
-    <div class="nav-item" data-tab="laporan" onclick="window.location.href='searchlaporan'">
+    <div class="nav-item" data-tab="laporan" onclick="window.location.href='searchlaporan.html?page=laporan'">
       <div class="nav-icon">📊</div>
       <div class="nav-label">Laporan</div>
     </div>
-    <div class="nav-item" data-tab="admin" onclick="window.location.href='admin'">
+    <div class="nav-item" data-tab="admin" onclick="window.location.href='admin.html'">
       <div class="nav-icon">⚙️</div>
       <div class="nav-label">Admin</div>
     </div>
@@ -995,7 +995,7 @@ async function fetchDashboard() {
         }
       });
       state.pengingat = pengingatMap;
-      state.followup = d.followup || [];
+      state.followup = d.catatan_bengkel || d.followup || [];
       state.biayaBulan = d.biayaBulan || 0;
       if (d.kartu) {
         document.getElementById('cntTerlambat').textContent = d.kartu.terlambat_servis || 0;
@@ -1031,7 +1031,7 @@ async function fetchDashboard() {
       }
     });
     state.pengingat = pengingatMap;
-    state.followup = d.followup || [];
+    state.followup = d.catatan_bengkel || d.followup || [];
     state.biayaBulan = d.biayaBulan || 0;
     if (d.kartu) {
       document.getElementById('cntTerlambat').textContent = d.kartu.terlambat_servis || 0;
@@ -1342,7 +1342,7 @@ async function saveKm() {
         body: JSON.stringify({
           action: 'updateKM',
           plat_nomor: v.plat_nomor,
-          km_terakhir: val,
+          km_baru: val,
         }),
       });
       const data = await res.json();
@@ -1402,7 +1402,7 @@ document.getElementById('userPopup').addEventListener('click', function(e) {
 
 // ── NAVIGATION ────────────────────────────────────────────────────────
 function filterAlerts(type) {
-  showToast(`Filter: ${type === 'terlambat' ? 'Terlambat' : type === 'segera' ? 'Segera' : 'Cek Kondisi'} — fitur detail ada di Tahap 6`);
+  window.location.href = `searchlaporan.html?page=laporan`;
 }
 
 function goToServis(plat) {
@@ -1411,7 +1411,7 @@ function goToServis(plat) {
     openUserPicker();
     return;
   }
-  showToast(`Catat Servis untuk ${plat} — dibangun di Tahap 4`);
+  window.location.href = `quickservice.html?plat=${encodeURIComponent(plat)}`;
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────

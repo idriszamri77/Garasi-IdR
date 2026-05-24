@@ -317,11 +317,11 @@ canvas{display:block;}
     <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3-3a1 1 0 000-1.4l-1.6-1.6a1 1 0 00-1.4 0l-3 3zM9 13l-4 4a2 2 0 002.8 2.8L12 16M9 13l2-2"/></svg>
     <span style="font-size:10px;font-weight:500;">Servis</span>
   </a>
-  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#7C6FCD;">
+  <a href="#" id="bnav-cari" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#7C6FCD;" onclick="switchPage('search');return false;">
     <svg width="22" height="22" fill="#7C6FCD" viewBox="0 0 24 24"><circle fill="#7C6FCD" cx="11" cy="11" r="7"/><path stroke="white" stroke-width="2" stroke-linecap="round" d="M20 20l-4-4"/></svg>
     <span style="font-size:10px;font-weight:600;color:#7C6FCD;">Cari</span>
   </a>
-  <a href="#" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="navTo('laporan')">
+  <a href="#" id="bnav-laporan" class="flex-1 flex flex-col items-center justify-center gap-0.5" style="color:#B0B8C8;" onclick="switchPage('laporan');return false;">
     <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><rect stroke="currentColor" stroke-width="2" x="3" y="3" width="18" height="18" rx="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 17v-5M12 17v-9M16 17v-3"/></svg>
     <span style="font-size:10px;font-weight:500;">Laporan</span>
   </a>
@@ -481,6 +481,11 @@ function switchPage(page) {
   document.querySelectorAll('.page-tab').forEach((b,i)=>{
     b.classList.toggle('active', (page==='search'&&i===0)||(page==='laporan'&&i===1));
   });
+  // Update bottom nav active color
+  const navCari    = document.getElementById('bnav-cari');
+  const navLaporan = document.getElementById('bnav-laporan');
+  if (navCari)    navCari.style.color    = page==='search'  ? '#7C6FCD' : '#B0B8C8';
+  if (navLaporan) navLaporan.style.color = page==='laporan' ? '#3DAA72' : '#B0B8C8';
   if (page==='laporan') renderLaporan();
 }
 
@@ -1144,7 +1149,7 @@ function hide(id){document.getElementById(id)?.classList.add('hidden');}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function closeModal(id){hide(id);}
 function navTo(p){
-  const pages={home:'dashboard.html',servis:'quickservice.html',cari:'searchlaporan.html',laporan:'searchlaporan.html',admin:'admin.html'};
+  const pages={home:'dashboard.html',servis:'quickservice.html',cari:'searchlaporan.html?page=cari',laporan:'searchlaporan.html?page=laporan',admin:'admin.html'};
   window.location.href=pages[p]||'dashboard.html';
 }
 function navToKendaraan(plat,tab='info'){
@@ -1167,9 +1172,10 @@ function showToast(msg,type=''){
 document.addEventListener('DOMContentLoaded',()=>{
   runSearch(); // show all on load
 
-  // Check URL for page param: ?page=laporan
+  // Check URL for page param: ?page=laporan | ?page=cari
   const p = new URLSearchParams(window.location.search).get('page');
   if (p==='laporan') switchPage('laporan');
+  else switchPage('search');
 });
 </script>
 </body>
