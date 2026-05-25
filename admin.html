@@ -222,7 +222,12 @@ input:checked ~ .toggle-thumb{transform:translateX(18px);}
     <div class="numpad-key zero" onclick="lockKeyPress('0')">0</div>
     <div class="numpad-key del" onclick="lockKeyDel()">⌫</div>
   </div>
-  <button class="btn-ghost" style="color:rgba(255,255,255,.4);margin-top:20px;" onclick="goBackFromAdmin()">← Kembali ke Home</button>
+  <button id="lockSubmitBtn" onclick="verifyPin()" style="display:none;background:var(--orange);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;padding:13px 40px;margin-top:16px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Masuk →</button>
+  <div style="display:flex;gap:20px;margin-top:16px;align-items:center;">
+    <button class="btn-ghost" style="color:rgba(255,255,255,.4);font-size:13px;" onclick="goBackFromAdmin()">← Kembali</button>
+    <span style="color:rgba(255,255,255,.2);font-size:13px;">|</span>
+    <button class="btn-ghost" style="color:rgba(255,255,255,.4);font-size:13px;" onclick="showForgotPin()">Lupa PIN?</button>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
@@ -434,6 +439,14 @@ input:checked ~ .toggle-thumb{transform:translateX(18px);}
     <div class="admin-section" style="padding-top:4px;">
       <div class="admin-section-title">Data & Backup</div>
       <div class="admin-card">
+        <div class="admin-menu-item" onclick="showSubPage('histori')">
+          <div class="admin-menu-icon" style="background:#FFF1F2;">🗑️</div>
+          <div class="admin-menu-text">
+            <div class="admin-menu-title">Hapus Data Servis</div>
+            <div class="admin-menu-desc">Hapus record servis yang salah input</div>
+          </div>
+          <div class="admin-menu-arrow">›</div>
+        </div>
         <div class="admin-menu-item" onclick="showSubPage('backup')">
           <div class="admin-menu-icon" style="background:#FFF0F6;">💾</div>
           <div class="admin-menu-text">
@@ -531,6 +544,34 @@ input:checked ~ .toggle-thumb{transform:translateX(18px);}
     </div>
     <div style="flex:1;overflow-y:auto;padding:0 16px 80px;" id="usersList">
       <div style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;">Memuat daftar anggota...</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SUB PAGE: HISTORI SERVIS
+  ══════════════════════════════════ -->
+  <div class="sub-page" id="sub-histori">
+    <div class="sub-header">
+      <button class="header-back" onclick="hideSubPage()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 14L6 9l5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="sub-header-title">🗑️ Hapus Data Servis</div>
+      <div style="width:36px;"></div>
+    </div>
+    <div style="padding:12px 16px 0;">
+      <div style="background:#FFF1F2;border-radius:10px;padding:12px 14px;font-size:13px;color:#B91C1C;display:flex;align-items:flex-start;gap:8px;">
+        <span>⚠️</span>
+        <span>Data servis yang dihapus tidak bisa dikembalikan. Pastikan yakin sebelum menghapus.</span>
+      </div>
+      <!-- Filter per kendaraan -->
+      <div style="margin-top:12px;">
+        <select id="historiFilterKend" onchange="loadHistoriAdmin()" style="width:100%;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;background:#fff;color:#1E293B;">
+          <option value="">Semua Kendaraan</option>
+        </select>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:12px 16px 80px;" id="historiAdminList">
+      <div style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;">Memuat data servis...</div>
     </div>
   </div>
 
@@ -790,6 +831,38 @@ input:checked ~ .toggle-thumb{transform:translateX(18px);}
   </div>
 </div>
 
+<!-- Lupa PIN Modal -->
+<div class="modal-overlay hidden" id="forgotPinModal" style="align-items:center;justify-content:center;">
+  <div class="modal-sheet" style="max-width:400px;width:calc(100% - 40px);border-radius:20px;background:#fff;">
+    <div class="modal-handle"></div>
+    <div id="forgotStep1">
+      <div style="font-size:17px;font-weight:700;color:#1E293B;margin-bottom:6px;">Lupa PIN?</div>
+      <div style="font-size:13px;color:#64748B;margin-bottom:20px;">Masukkan nama admin yang kamu daftarkan saat setup untuk verifikasi.</div>
+      <div class="field-wrap">
+        <div class="field-label">Nama Admin <span class="req">*</span></div>
+        <input type="text" id="fp-nama" placeholder="Nama admin yang didaftarkan..." autocomplete="off">
+      </div>
+      <div class="err-msg hidden" id="fp-err" style="margin-bottom:8px;"></div>
+      <button class="btn-primary" onclick="verifyForgotNama()">Verifikasi →</button>
+      <button class="btn-ghost" onclick="closeModal('forgotPinModal')" style="margin-top:8px;width:100%;text-align:center;">Batal</button>
+    </div>
+    <div id="forgotStep2" style="display:none;">
+      <div style="font-size:17px;font-weight:700;color:#1E293B;margin-bottom:6px;">Buat PIN Baru</div>
+      <div style="font-size:13px;color:#64748B;margin-bottom:20px;">Verifikasi berhasil. Buat PIN baru 4–6 digit.</div>
+      <div class="field-wrap">
+        <div class="field-label">PIN Baru <span class="req">*</span></div>
+        <input type="password" id="fp-new" inputmode="numeric" placeholder="••••" maxlength="6">
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Konfirmasi PIN <span class="req">*</span></div>
+        <input type="password" id="fp-confirm" inputmode="numeric" placeholder="••••" maxlength="6">
+      </div>
+      <div class="err-msg hidden" id="fp-err2" style="margin-bottom:8px;"></div>
+      <button class="btn-primary" onclick="saveForgotPin()">Simpan PIN Baru</button>
+    </div>
+  </div>
+</div>
+
 <!-- Ganti PIN Modal -->
 <div class="modal-overlay hidden" id="changePinModal">
   <div class="modal-sheet" style="max-width:430px;">
@@ -885,9 +958,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       showOnboarding();
     }
   } catch(e) {
-    // Gagal cek backend — tampilkan onboarding sebagai fallback
-    document.getElementById('lockError').textContent = '';
-    showOnboarding();
+    // Gagal cek backend — tetap di lock screen, biarkan user coba masukkan PIN
+    document.getElementById('lockError').textContent = 'Tidak dapat terhubung. Masukkan PIN jika sudah pernah setup.';
+    // Tampilkan tombol Masuk supaya user bisa submit manual
+    document.getElementById('lockSubmitBtn').style.display = '';
   }
 });
 
@@ -1099,11 +1173,12 @@ function showLockScreen() {
 
 function lockKeyPress(digit) {
   const savedPin = localStorage.getItem(PIN_KEY) || '';
-  lockPinLength = savedPin.length || 4;
-  if (lockBuffer.length >= lockPinLength) return;
+  const maxLen = savedPin ? savedPin.length : 6;
+  if (lockBuffer.length >= maxLen) return;
   lockBuffer += digit;
   renderLockBoxes();
-  if (lockBuffer.length === lockPinLength) {
+  // Auto-verify only when local PIN known and length matches
+  if (savedPin && lockBuffer.length === savedPin.length) {
     setTimeout(verifyPin, 100);
   }
 }
@@ -1116,9 +1191,10 @@ function lockKeyDel() {
 
 function renderLockBoxes() {
   const savedPin = localStorage.getItem(PIN_KEY) || '';
-  lockPinLength = savedPin.length || 4;
-  const boxes = document.getElementById('lockPinBoxes');
-  // Show correct number of boxes
+  lockPinLength = savedPin ? savedPin.length : Math.max(4, lockBuffer.length);
+  // Show/hide manual submit button (only when no local PIN and 4+ digits typed)
+  const submitBtn = document.getElementById('lockSubmitBtn');
+  if (submitBtn) submitBtn.style.display = (!savedPin && lockBuffer.length >= 4) ? '' : 'none';
   for (let i = 0; i < 6; i++) {
     const box = document.getElementById(`lock-b${i}`);
     if (!box) continue;
@@ -1133,46 +1209,136 @@ function renderLockBoxes() {
     } else {
       box.innerHTML = '';
     }
-    // Override colors for dark background
     box.style.background = 'rgba(255,255,255,.05)';
     box.style.borderColor = i < lockBuffer.length ? '#fff' : 'rgba(255,255,255,.2)';
     if (i === lockBuffer.length) box.style.borderColor = 'var(--orange)';
   }
 }
 
-async function verifyPin() {
-  const savedPin = localStorage.getItem(PIN_KEY);
-  if (!savedPin) { showOnboarding(); return; }
+function lockSuccess() {
+  const pinLen = lockBuffer.length || lockPinLength;
+  for (let i = 0; i < pinLen; i++) {
+    const b = document.getElementById(`lock-b${i}`);
+    if (b) { b.style.borderColor='var(--green)'; b.style.background='rgba(34,197,94,.15)'; }
+  }
+  setTimeout(() => {
+    document.getElementById('lockScreen').classList.add('hidden');
+    document.getElementById('mainApp').style.display = '';
+    document.getElementById('adminNamaDisplay').textContent = localStorage.getItem(NAMA_KEY) || 'Admin';
+    loadAdminData();
+  }, 300);
+}
 
+function lockFail(msg) {
+  document.getElementById('lockError').textContent = msg || 'PIN salah. Coba lagi.';
+  const pinLen = lockBuffer.length || lockPinLength;
+  for (let i = 0; i < pinLen; i++) {
+    const b = document.getElementById(`lock-b${i}`);
+    if (b) { b.style.borderColor='var(--red)'; b.style.background='rgba(239,68,68,.15)'; }
+  }
+  setTimeout(() => { lockBuffer = ''; renderLockBoxes(); document.getElementById('lockError').textContent = ''; }, 800);
+}
+
+async function verifyPin() {
+  if (!lockBuffer) return;
+  const savedPin = localStorage.getItem(PIN_KEY);
+
+  if (!savedPin) {
+    // Tidak ada PIN lokal — verifikasi ke backend
+    document.getElementById('lockError').textContent = 'Memverifikasi...';
+    document.getElementById('lockSubmitBtn').disabled = true;
+    try {
+      const rv = await apiPost({ action: 'verifyPin', pin: lockBuffer });
+      document.getElementById('lockSubmitBtn').disabled = false;
+      if (rv.success) {
+        localStorage.setItem(PIN_KEY, lockBuffer);
+        lockPinLength = lockBuffer.length;
+        if (rv.nama) localStorage.setItem(NAMA_KEY, rv.nama);
+        lockSuccess();
+      } else {
+        lockFail('PIN salah. Coba lagi.');
+      }
+    } catch(e) {
+      document.getElementById('lockSubmitBtn').disabled = false;
+      lockFail('Tidak dapat terhubung. Coba lagi.');
+    }
+    return;
+  }
+
+  // Ada PIN lokal — verifikasi langsung
   if (lockBuffer === savedPin) {
-    // Success
-    for (let i = 0; i < lockPinLength; i++) {
-      const b = document.getElementById(`lock-b${i}`);
-      if (b) { b.style.borderColor='var(--green)'; b.style.background='rgba(34,197,94,.15)'; }
-    }
-    setTimeout(() => {
-      document.getElementById('lockScreen').classList.add('hidden');
-      document.getElementById('mainApp').style.display = '';
-      document.getElementById('adminNamaDisplay').textContent = localStorage.getItem(NAMA_KEY) || 'Admin';
-      loadAdminData();
-    }, 300);
+    lockSuccess();
   } else {
-    // Error
-    document.getElementById('lockError').textContent = 'PIN salah. Coba lagi.';
-    for (let i = 0; i < lockPinLength; i++) {
-      const b = document.getElementById(`lock-b${i}`);
-      if (b) { b.style.borderColor='var(--red)'; b.style.background='rgba(239,68,68,.15)'; }
-    }
-    setTimeout(() => {
-      lockBuffer = '';
-      renderLockBoxes();
-      document.getElementById('lockError').textContent = '';
-    }, 800);
+    lockFail('PIN salah. Coba lagi.');
   }
 }
 
 function goBackFromAdmin() {
   window.location.href = 'dashboard.html';
+}
+
+// ── LUPA PIN ──────────────────────────────────────────────────────
+function showForgotPin() {
+  document.getElementById('forgotStep1').style.display = '';
+  document.getElementById('forgotStep2').style.display = 'none';
+  document.getElementById('fp-nama').value = '';
+  document.getElementById('fp-err').classList.add('hidden');
+  openModal('forgotPinModal');
+}
+
+async function verifyForgotNama() {
+  const nama = document.getElementById('fp-nama').value.trim();
+  const err = document.getElementById('fp-err');
+  if (!nama) { err.textContent = 'Nama tidak boleh kosong'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  showLoading('Memverifikasi...');
+  try {
+    const rv = await apiPost({ action: 'verifyAdminNama', nama });
+    hideLoading();
+    if (rv.success) {
+      document.getElementById('forgotStep1').style.display = 'none';
+      document.getElementById('forgotStep2').style.display = '';
+      document.getElementById('fp-new').value = '';
+      document.getElementById('fp-confirm').value = '';
+      document.getElementById('fp-err2').classList.add('hidden');
+    } else {
+      err.textContent = '⚠ Nama tidak cocok dengan data admin';
+      err.classList.remove('hidden');
+    }
+  } catch(e) {
+    hideLoading();
+    err.textContent = '⚠ Tidak dapat terhubung. Coba lagi.';
+    err.classList.remove('hidden');
+  }
+}
+
+async function saveForgotPin() {
+  const pin = document.getElementById('fp-new').value.trim();
+  const conf = document.getElementById('fp-confirm').value.trim();
+  const err = document.getElementById('fp-err2');
+  if (!pin || pin.length < 4) { err.textContent = '⚠ PIN minimal 4 digit'; err.classList.remove('hidden'); return; }
+  if (pin !== conf) { err.textContent = '⚠ PIN tidak cocok'; err.classList.remove('hidden'); return; }
+  if (!/^\d+$/.test(pin)) { err.textContent = '⚠ PIN harus angka'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  showLoading('Menyimpan PIN baru...');
+  try {
+    const rv = await apiPost({ action: 'setPin', pin, pin_confirm: conf });
+    hideLoading();
+    if (rv.success) {
+      localStorage.setItem(PIN_KEY, pin);
+      closeModal('forgotPinModal');
+      showToast('PIN berhasil direset ✓', 'success');
+      lockBuffer = '';
+      renderLockBoxes();
+    } else {
+      err.textContent = '⚠ ' + (rv.error || 'Gagal menyimpan PIN');
+      err.classList.remove('hidden');
+    }
+  } catch(e) {
+    hideLoading();
+    err.textContent = '⚠ Tidak dapat terhubung. Coba lagi.';
+    err.classList.remove('hidden');
+  }
 }
 
 // ── ADMIN DATA LOADING ─────────────────────────────────────────────
@@ -1210,13 +1376,15 @@ function showSubPage(name) {
   document.getElementById('headerBack').classList.remove('hidden');
   document.getElementById('headerTitle').textContent = {
     kendaraan:'🚗 Kendaraan', bengkel:'🔧 Bengkel',
-    jadwal:'📋 Jadwal Servis', users:'👨‍👩‍👧‍👦 Anggota', backup:'💾 Backup'
+    jadwal:'📋 Jadwal Servis', users:'👨‍👩‍👧‍👦 Anggota',
+    backup:'💾 Backup', histori:'🗑️ Hapus Data Servis'
   }[name];
   // Load data
   if (name === 'kendaraan') renderKendaraan();
   if (name === 'bengkel')   renderBengkel();
   if (name === 'jadwal')    loadJadwal();
   if (name === 'users')     renderUsers();
+  if (name === 'histori')   loadHistoriAdmin();
 }
 
 function hideSubPage() {
@@ -1587,6 +1755,62 @@ async function savePin() {
     closeModal('changePinModal');
     showToast('PIN berhasil diubah ✓', 'success');
   } catch(e) { hideLoading(); err.textContent = '⚠ Gagal terhubung'; err.classList.remove('hidden'); }
+}
+
+// ── HISTORI SERVIS (ADMIN) ────────────────────────────────────────
+async function loadHistoriAdmin() {
+  const list = document.getElementById('historiAdminList');
+  const filterSel = document.getElementById('historiFilterKend');
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:#94A3B8;">Memuat...</div>';
+  try {
+    const rv = await apiGet('getHistori');
+    const all = rv.success ? (rv.data || []) : [];
+    // Populate filter dropdown
+    const kends = [...new Set(all.map(h => h.plat_nomor).filter(Boolean))];
+    filterSel.innerHTML = '<option value="">Semua Kendaraan</option>' +
+      kends.map(p => `<option value="${p}"${filterSel.value===p?' selected':''}>${p}</option>`).join('');
+    const filtered = filterSel.value ? all.filter(h => h.plat_nomor === filterSel.value) : all;
+    if (!filtered.length) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:#94A3B8;font-size:14px;">Belum ada data servis.</div>';
+      return;
+    }
+    list.innerHTML = filtered.sort((a,b) => new Date(b.tanggal||0) - new Date(a.tanggal||0)).map(h => {
+      const tgl = h.tanggal ? new Date(h.tanggal).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}) : '—';
+      const total = h.total ? 'Rp ' + Number(h.total).toLocaleString('id-ID') : '—';
+      return `<div style="background:#fff;border-radius:12px;border:1.5px solid #E8EEF6;padding:14px 16px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;color:#1E293B;">${h.plat_nomor||'—'} <span style="font-weight:500;color:#64748B;">· ${h.nama_user||'—'}</span></div>
+            <div style="font-size:12px;color:#94A3B8;margin-top:2px;">${tgl} · ${h.bengkel||'—'}</div>
+            <div style="font-size:13px;color:var(--orange);font-weight:700;margin-top:4px;">${total}</div>
+          </div>
+          <button onclick="confirmHapusHistori('${h.id||h.histori_id}')" style="background:#FFF1F2;border:1.5px solid #FECDD3;border-radius:8px;padding:7px 12px;color:#B91C1C;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:'Plus Jakarta Sans',sans-serif;">Hapus</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#EF4444;font-size:14px;">Gagal memuat data.</div>';
+  }
+}
+
+function confirmHapusHistori(id) {
+  if (!id) return;
+  showConfirm('⚠️', 'Hapus Record Servis?', 'Data servis ini akan dihapus permanen. Tidak bisa dikembalikan.', async () => {
+    showLoading('Menghapus...');
+    try {
+      const rv = await apiPost({ action: 'deleteHistori', id });
+      hideLoading();
+      if (rv.success) {
+        showToast('Record servis dihapus ✓', 'success');
+        loadHistoriAdmin();
+      } else {
+        showToast(rv.error || 'Gagal menghapus', 'error');
+      }
+    } catch(e) {
+      hideLoading();
+      showToast('Tidak dapat terhubung', 'error');
+    }
+  });
 }
 
 // ── BACKUP ───────────────────────────────────────────────────────

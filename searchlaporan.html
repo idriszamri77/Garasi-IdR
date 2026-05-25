@@ -6,7 +6,7 @@
 <title>Garasi IdR — Cari & Laporan</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --orange:#F05E0E;--navy:#0F1F4B;--green:#22C55E;
@@ -19,7 +19,7 @@ body{background:transparent;font-family:'Plus Jakarta Sans',sans-serif;color:#1E
 
 /* ── MOBILE WRAPPER ── */
 .app-wrap{max-width:430px;margin:0 auto;min-height:100dvh;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow-x:hidden;}
-.display{font-family:'Syne',sans-serif;}
+.display{font-family:'Space Grotesk',sans-serif;}
 .mono{font-family:'JetBrains Mono',monospace;}
 
 /* ── Page tabs (top-level: Search / Laporan) ── */
@@ -63,8 +63,9 @@ body{background:transparent;font-family:'Plus Jakarta Sans',sans-serif;color:#1E
 
 /* ── Laporan stat cards ── */
 .stat-card{background:#fff;border-radius:14px;padding:16px;border:1.5px solid #E8EEF6;}
-.stat-big{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--orange);line-height:1.1;letter-spacing:-0.5px;}
-.stat-label{font-size:11px;color:#94A3B8;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;}
+.stat-big{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:800;color:var(--orange);line-height:1;letter-spacing:-1px;display:flex;align-items:baseline;gap:4px;}
+.stat-big .stat-prefix{font-size:13px;font-weight:700;letter-spacing:0;font-family:'Plus Jakarta Sans',sans-serif;opacity:0.7;margin-bottom:1px;}
+.stat-label{font-size:10px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:6px;}
 
 /* ── Bar chart ── */
 .bar-chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -129,6 +130,7 @@ canvas{display:block;}
 <div style="background:var(--navy);">
   <!-- Title row -->
   <div style="height:52px;" class="flex items-center px-4 gap-2">
+    <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 95,50 5,50" fill="#1E3A8A"/><polygon points="20,50 80,50 50,5" fill="#0F1F4B"/><polygon points="20,50 80,50 50,85" fill="#C5D95A"/></svg>
     <span class="display text-white font-bold text-lg">Garasi IdR</span>
     <span class="text-white/30 text-sm ml-1">— Cari &amp; Laporan</span>
   </div>
@@ -209,19 +211,19 @@ canvas{display:block;}
       <!-- Stat grid -->
       <div class="grid grid-cols-2 gap-3">
         <div class="stat-card">
-          <p class="stat-big" id="lsTotalServis">0</p>
+          <p class="stat-big"><span id="lsTotalServis">0</span><span style="font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;color:#94A3B8;margin-left:2px;">×</span></p>
           <p class="stat-label">Total Servis</p>
         </div>
         <div class="stat-card">
-          <p class="stat-big" id="lsTotalBiaya" style="font-size:20px;">Rp 0</p>
+          <p class="stat-big"><span class="stat-prefix">Rp</span><span id="lsTotalBiaya">0</span></p>
           <p class="stat-label">Total Biaya</p>
         </div>
         <div class="stat-card">
-          <p class="stat-big" id="lsAvgBiaya" style="font-size:20px;">Rp 0</p>
+          <p class="stat-big"><span class="stat-prefix">Rp</span><span id="lsAvgBiaya">0</span></p>
           <p class="stat-label">Rata-rata/Servis</p>
         </div>
         <div class="stat-card">
-          <p class="stat-big" id="lsFollowup">0</p>
+          <p class="stat-big"><span id="lsFollowup">0</span><span style="font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;color:#94A3B8;margin-left:2px;">item</span></p>
           <p class="stat-label">Tindak Lanjut Aktif</p>
         </div>
       </div>
@@ -771,8 +773,8 @@ function renderRingkasan(data) {
   const total = data.reduce((s,h)=>s+h.total,0);
   const followupCount = data.filter(h=>h.followup).length;
   document.getElementById('lsTotalServis').textContent = data.length;
-  document.getElementById('lsTotalBiaya').textContent = rp(total);
-  document.getElementById('lsAvgBiaya').textContent = data.length ? rp(Math.round(total/data.length)) : 'Rp 0';
+  document.getElementById('lsTotalBiaya').textContent = Math.floor(total||0).toLocaleString('id-ID');
+  document.getElementById('lsAvgBiaya').textContent = data.length ? Math.floor(total/data.length).toLocaleString('id-ID') : '0';
   document.getElementById('lsFollowup').textContent = followupCount;
 
   // Top kendaraan
@@ -1210,32 +1212,39 @@ function navToKendaraan(plat,tab='info'){
       </div>
     </div>` : jadwal ? `<div style="background:#DCFCE7;border-radius:10px;padding:12px 14px;font-size:13px;font-weight:600;color:#15803D;">✅ Semua jadwal servis dalam kondisi aman</div>` : ''}
 
-    <!-- Servis terakhir -->
-    ${last ? `
+    <!-- History 5 terbaru -->
     <div>
-      <p class="sec">Servis Terakhir</p>
-      <div style="background:#F8FAFC;border-radius:12px;border:1.5px solid #E8EEF6;overflow:hidden;">
-        <div style="padding:12px 14px;border-bottom:1px solid #F1F5F9;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:13px;font-weight:600;color:#1E293B;">${fmtDate(last.tanggal)}</span>
-            <span style="font-size:14px;font-weight:700;color:var(--orange);">${rp(last.total)}</span>
-          </div>
-          <p style="font-size:12px;color:#94A3B8;margin-top:2px;">${last.bengkel}</p>
-        </div>
-        ${last.items.slice(0,3).map(i=>`
-          <div style="display:flex;justify-content:space-between;padding:8px 14px;border-bottom:1px solid #F8FAFC;font-size:12px;">
-            <span style="color:#475569;">${i.nama}</span>
-            <span style="font-weight:600;color:#1E293B;">${rp(i.biaya)}</span>
-          </div>`).join('')}
-        ${last.items.length>3?`<p style="font-size:11px;color:#94A3B8;padding:6px 14px;">+${last.items.length-3} item lagi</p>`:''}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <p class="sec" style="margin:0;">Riwayat Servis</p>
+        ${histori.length > 0 ? `<span style="font-size:12px;color:#94A3B8;">${histori.length} total</span>` : ''}
       </div>
-    </div>` : '<p style="text-align:center;color:#94A3B8;font-size:13px;padding:16px;">Belum ada riwayat servis</p>'}
-
-    <!-- Histori count -->
-    ${histori.length > 1 ? `<p style="text-align:center;font-size:12px;color:#94A3B8;">${histori.length} total servis tercatat</p>` : ''}
+      ${histori.length === 0
+        ? '<p style="text-align:center;color:#94A3B8;font-size:13px;padding:12px 0;">Belum ada riwayat servis</p>'
+        : histori.slice(0,5).map(h=>`
+          <div style="background:#F8FAFC;border-radius:12px;border:1.5px solid #E8EEF6;overflow:hidden;margin-bottom:8px;">
+            <div style="padding:10px 14px;border-bottom:1px solid #F1F5F9;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;font-weight:600;color:#1E293B;">${fmtDate(h.tanggal)}</span>
+                <span style="font-size:13px;font-weight:700;color:var(--orange);">${rp(h.total)}</span>
+              </div>
+              <p style="font-size:12px;color:#94A3B8;margin-top:1px;">${h.bengkel||'—'}</p>
+            </div>
+            ${h.items.slice(0,3).map(i=>`
+              <div style="display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid #F8FAFC;font-size:12px;">
+                <span style="color:#475569;">${i.nama}</span>
+                <span style="font-weight:600;color:#1E293B;">${rp(i.biaya)}</span>
+              </div>`).join('')}
+            ${h.items.length>3?`<p style="font-size:11px;color:#94A3B8;padding:5px 14px;">+${h.items.length-3} item lagi</p>`:''}
+          </div>`).join('')
+      }
+    </div>
 
     <!-- Tombol aksi -->
-    <div style="display:flex;gap:10px;padding-top:4px;">
+    <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px;">
+      ${histori.length > 5 ? `
+      <button onclick="window.location.href='detailkendaraan.html?plat='+encodeURIComponent('${plat}')+'&tab=histori'" style="width:100%;background:#F1F5F9;color:#0F1F4B;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">
+        Lihat Semua ${histori.length} Riwayat →
+      </button>` : ''}
       <button onclick="closeModal('modalKendaraan');navTo('servis');" class="btn-primary" style="flex:1;">
         🔧 Catat Servis
       </button>
