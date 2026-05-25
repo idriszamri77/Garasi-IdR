@@ -837,6 +837,9 @@ input:checked ~ .toggle-thumb{transform:translateX(18px);}
     </div>
     <div class="err-msg hidden" id="us-err" style="margin-bottom:8px;"></div>
     <button class="btn-primary" onclick="saveUser()">Simpan</button>
+    <div id="us-hapus-wrap" style="display:none;margin-top:10px;">
+      <button onclick="confirmHapusUser()" style="width:100%;background:none;border:1.5px solid #FCA5A5;color:#EF4444;border-radius:12px;min-height:44px;font-weight:600;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">🗑 Hapus Anggota</button>
+    </div>
   </div>
 </div>
 
@@ -1670,6 +1673,7 @@ function showUserForm(u = null) {
   document.getElementById('us-role').value    = isEdit ? u.role : 'Anggota';
   document.getElementById('us-status').value  = isEdit ? u.status : 'Aktif';
   document.getElementById('us-status-wrap').style.display = isEdit ? 'block' : 'none';
+  document.getElementById('us-hapus-wrap').style.display = isEdit ? 'block' : 'none';
   if (!isEdit && dataCache.users.length >= 5) {
     showToast('Maks 5 anggota', 'error'); return;
   }
@@ -1694,6 +1698,28 @@ async function saveUser() {
     if (!rv.success) { err.textContent = '⚠ ' + rv.error; err.classList.remove('hidden'); return; }
     closeModal('userModal');
     showToast(isEdit ? 'Anggota diperbarui ✓' : 'Anggota ditambahkan ✓', 'success');
+    const rvU = await apiGet('getUsers');
+    if (rvU.success) { dataCache.users = rvU.data || []; renderUsers(); }
+  } catch(e) { hideLoading(); err.textContent = '⚠ Gagal terhubung'; err.classList.remove('hidden'); }
+}
+
+function confirmHapusUser() {
+  const nama = document.getElementById('us-nama').value.trim() || 'anggota ini';
+  if (!confirm(`Hapus "${nama}"? Data servis yang sudah tercatat tidak ikut terhapus.`)) return;
+  deleteUser();
+}
+
+async function deleteUser() {
+  const idEdit = document.getElementById('us-id-edit').value;
+  if (!idEdit) return;
+  const err = document.getElementById('us-err');
+  showLoading('Menghapus...');
+  try {
+    const rv = await apiPost({ action:'deleteUser', id_user:idEdit });
+    hideLoading();
+    if (!rv.success) { err.textContent = '⚠ ' + rv.error; err.classList.remove('hidden'); return; }
+    closeModal('userModal');
+    showToast('Anggota dihapus ✓', 'success');
     const rvU = await apiGet('getUsers');
     if (rvU.success) { dataCache.users = rvU.data || []; renderUsers(); }
   } catch(e) { hideLoading(); err.textContent = '⚠ Gagal terhubung'; err.classList.remove('hidden'); }
