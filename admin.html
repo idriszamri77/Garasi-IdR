@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Garasi IdR — Admin & Onboarding</title>
+<title>Garasiku — Admin & Onboarding</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -223,6 +223,13 @@ input:checked ~ .toggle-thumb{transform:translateX(18px);}
     <div class="numpad-key del" onclick="lockKeyDel()">⌫</div>
   </div>
   <button id="lockSubmitBtn" onclick="verifyPin()" style="display:none;background:var(--orange);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;padding:13px 40px;margin-top:16px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Masuk →</button>
+
+  <!-- Opsi setup ulang — muncul saat no local PIN -->
+  <div id="lockSetupUlangWrap" style="display:none;margin-top:16px;text-align:center;padding:14px 20px;background:rgba(255,255,255,.06);border-radius:12px;border:1px solid rgba(255,255,255,.1);">
+    <p style="color:rgba(255,255,255,.6);font-size:13px;margin-bottom:10px;">Buka di browser yang sama saat pertama setup, atau buat PIN baru di sini.</p>
+    <button onclick="showOnboarding()" style="background:var(--orange);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;padding:10px 24px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Setup Ulang PIN</button>
+  </div>
+
   <div style="display:flex;gap:20px;margin-top:16px;align-items:center;">
     <button class="btn-ghost" style="color:rgba(255,255,255,.4);font-size:13px;" onclick="goBackFromAdmin()">← Kembali</button>
     <span style="color:rgba(255,255,255,.2);font-size:13px;">|</span>
@@ -246,7 +253,7 @@ input:checked ~ .toggle-thumb{transform:translateX(18px);}
   <div class="onboard-screen" id="ob-step-1">
     <div class="onboard-hero">
       <div class="onboard-icon"><span style="font-size:32px;">🚗</span></div>
-      <div class="display" style="font-size:26px;font-weight:800;color:var(--navy);line-height:1.2;">Selamat datang<br>di Garasi IdR</div>
+      <div class="display" style="font-size:26px;font-weight:800;color:var(--navy);line-height:1.2;">Selamat datang<br>di Garasiku</div>
       <div style="font-size:14px;color:#64748B;margin-top:10px;">Setup cepat — selesai dalam 2 menit</div>
     </div>
     <div class="onboard-body">
@@ -348,7 +355,7 @@ input:checked ~ .toggle-thumb{transform:translateX(18px);}
     <div style="font-size:72px;margin-bottom:20px;animation:popIn .5s ease;">✅</div>
     <div class="display" style="font-size:28px;font-weight:800;color:var(--navy);margin-bottom:8px;">Siap dipakai!</div>
     <div style="font-size:14px;color:#64748B;max-width:280px;line-height:1.6;margin-bottom:32px;">
-      Garasi IdR sudah dikonfigurasi. Jadwal Servis default sudah terisi otomatis di background.
+      Garasiku sudah dikonfigurasi. Jadwal Servis default sudah terisi otomatis di background.
     </div>
     <div style="background:#fff;border-radius:16px;padding:16px;border:1.5px solid #E8EEF6;width:100%;max-width:320px;text-align:left;margin-bottom:24px;">
       <div style="font-size:11px;font-weight:700;color:#94A3B8;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;">Ringkasan Setup</div>
@@ -460,8 +467,9 @@ input:checked ~ .toggle-thumb{transform:translateX(18px);}
 
     <!-- App info -->
     <div style="padding:16px 20px 8px;text-align:center;">
-      <div style="font-size:11px;color:#CBD5E1;font-weight:500;">Garasi IdR · Blueprint v3.2 MVP</div>
+      <div style="font-size:11px;color:#CBD5E1;font-weight:500;">Garasiku · Blueprint v3.2 MVP</div>
       <div style="font-size:10px;color:#CBD5E1;margin-top:2px;" id="appVersion">small but genuinely useful software ✨</div>
+      <div style="font-size:10px;color:#CBD5E1;opacity:.5;margin-top:4px;letter-spacing:.3px;">© juraganidr.com</div>
     </div>
   </div>
 
@@ -926,42 +934,16 @@ let editTarget     = null; // for delete confirmation
 let confirmCb      = null; // callback for confirm modal
 
 // ── INIT ──────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   const savedPin = localStorage.getItem(PIN_KEY);
 
   if (savedPin) {
-    // PIN sudah tersimpan di perangkat ini — langsung ke lock screen
+    // PIN tersimpan di perangkat ini — tampilkan lock screen
     lockPinLength = savedPin.length;
     showLockScreen();
-    return;
-  }
-
-  // Tidak ada PIN lokal — cek backend apakah sudah ada setup
-  // Jika SCRIPT_URL belum dikonfigurasi, langsung onboarding
-  if (!SCRIPT_URL || SCRIPT_URL.includes('YOUR_APPS_SCRIPT')) {
+  } else {
+    // Tidak ada PIN lokal — tampilkan onboarding untuk setup
     showOnboarding();
-    return;
-  }
-
-  // Tampilkan lock screen sementara sambil cek backend
-  showLockScreen();
-  document.getElementById('lockError').textContent = 'Memeriksa status...';
-
-  try {
-    const result = await apiGet('getUsers');
-    if (result.success && result.data && result.data.length > 0) {
-      // Ada data users → sistem sudah pernah di-setup di perangkat lain
-      // Tampilkan pesan meminta PIN dari admin
-      document.getElementById('lockError').textContent = 'Masukkan PIN admin untuk melanjutkan';
-    } else {
-      // Belum ada users → setup pertama kali
-      showOnboarding();
-    }
-  } catch(e) {
-    // Gagal cek backend — tetap di lock screen, biarkan user coba masukkan PIN
-    document.getElementById('lockError').textContent = 'Tidak dapat terhubung. Masukkan PIN jika sudah pernah setup.';
-    // Tampilkan tombol Masuk supaya user bisa submit manual
-    document.getElementById('lockSubmitBtn').style.display = '';
   }
 });
 
@@ -1109,7 +1091,7 @@ async function obStep2Next() {
   const nama = localStorage.getItem('ob_temp_nama');
   const pin  = localStorage.getItem('ob_temp_pin');
 
-  showLoading('Menyiapkan Garasi IdR...');
+  showLoading('Menyiapkan Garasiku...');
 
   try {
     // Step 1: create admin + PIN
@@ -1244,24 +1226,10 @@ async function verifyPin() {
   const savedPin = localStorage.getItem(PIN_KEY);
 
   if (!savedPin) {
-    // Tidak ada PIN lokal — verifikasi ke backend
-    document.getElementById('lockError').textContent = 'Memverifikasi...';
-    document.getElementById('lockSubmitBtn').disabled = true;
-    try {
-      const rv = await apiPost({ action: 'verifyPin', pin: lockBuffer });
-      document.getElementById('lockSubmitBtn').disabled = false;
-      if (rv.success) {
-        localStorage.setItem(PIN_KEY, lockBuffer);
-        lockPinLength = lockBuffer.length;
-        if (rv.nama) localStorage.setItem(NAMA_KEY, rv.nama);
-        lockSuccess();
-      } else {
-        lockFail('PIN salah. Coba lagi.');
-      }
-    } catch(e) {
-      document.getElementById('lockSubmitBtn').disabled = false;
-      lockFail('Tidak dapat terhubung. Coba lagi.');
-    }
+    // Tidak ada PIN lokal — PIN tidak bisa diverifikasi di perangkat ini
+    // Tampilkan opsi setup ulang
+    document.getElementById('lockError').textContent = 'PIN tidak tersimpan di perangkat ini.';
+    document.getElementById('lockSetupUlangWrap').style.display = '';
     return;
   }
 
