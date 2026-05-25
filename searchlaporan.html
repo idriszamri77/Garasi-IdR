@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Garasi IdR — Cari & Laporan</title>
+<title>Garasiku — Cari & Laporan</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -63,7 +63,7 @@ body{background:transparent;font-family:'Plus Jakarta Sans',sans-serif;color:#1E
 
 /* ── Laporan stat cards ── */
 .stat-card{background:#fff;border-radius:14px;padding:16px;border:1.5px solid #E8EEF6;}
-.stat-big{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:800;color:var(--orange);line-height:1;letter-spacing:-1px;display:flex;align-items:baseline;gap:4px;}
+.stat-big{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:800;color:var(--orange);line-height:1;letter-spacing:-0.5px;display:flex;align-items:baseline;gap:4px;}
 .stat-big .stat-prefix{font-size:13px;font-weight:700;letter-spacing:0;font-family:'Plus Jakarta Sans',sans-serif;opacity:0.7;margin-bottom:1px;}
 .stat-label{font-size:10px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-top:6px;}
 
@@ -130,8 +130,8 @@ canvas{display:block;}
 <div style="background:var(--navy);">
   <!-- Title row -->
   <div style="height:52px;" class="flex items-center px-4 gap-2">
-    <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 95,50 5,50" fill="#1E3A8A"/><polygon points="20,50 80,50 50,5" fill="#0F1F4B"/><polygon points="20,50 80,50 50,85" fill="#C5D95A"/></svg>
-    <span class="display text-white font-bold text-lg">Garasi IdR</span>
+    <div style="width:24px;height:24px;background:#F05E0E;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">🔧</div>
+    <span class="display text-white font-bold text-lg">Garasiku</span>
     <span class="text-white/30 text-sm ml-1">— Cari &amp; Laporan</span>
   </div>
   <!-- Page tabs -->
@@ -282,15 +282,15 @@ canvas{display:block;}
       <!-- Summary status -->
       <div class="grid grid-cols-3 gap-2">
         <div class="bg-white rounded-12px p-3 text-center" style="border-radius:12px;">
-          <p id="jadwalTerlambat" class="font-bold text-red-500" style="font-size:22px;">0</p>
+          <p id="jadwalTerlambat" class="font-bold text-red-500" style="font-size:18px;">0</p>
           <p class="text-xs text-slate-400 mt-0.5">Terlambat</p>
         </div>
         <div class="bg-white rounded-12px p-3 text-center" style="border-radius:12px;">
-          <p id="jadwalSegera" class="font-bold text-yellow-500" style="font-size:22px;">0</p>
+          <p id="jadwalSegera" class="font-bold text-yellow-500" style="font-size:18px;">0</p>
           <p class="text-xs text-slate-400 mt-0.5">Segera</p>
         </div>
         <div class="bg-white rounded-12px p-3 text-center" style="border-radius:12px;">
-          <p id="jadwalCek" class="font-bold text-blue-500" style="font-size:22px;">0</p>
+          <p id="jadwalCek" class="font-bold text-blue-500" style="font-size:18px;">0</p>
           <p class="text-xs text-slate-400 mt-0.5">Cek Kondisi</p>
         </div>
       </div>
@@ -313,6 +313,9 @@ canvas{display:block;}
 
   </div><!-- /laporanPanels -->
 </div><!-- /pageLaporan -->
+
+<!-- credit -->
+<div style="text-align:center;padding:8px 0 4px;font-size:10px;color:#94A3B8;opacity:.6;letter-spacing:.3px;">© juraganidr.com</div>
 
 <!-- ══════════════ BOTTOM NAV ══════════════ -->
 <nav class="bottom-nav fixed bottom-0 z-40 flex" style="left:50%;transform:translateX(-50%);width:100%;max-width:430px;">
@@ -1126,7 +1129,7 @@ function buildPDFHtml({data, selKend, inclHistori, inclJadwal, inclBiaya, inclFo
   }
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>Laporan Garasi IdR — ${today}</title>
+<title>Laporan Garasiku — ${today}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -1148,7 +1151,7 @@ function buildPDFHtml({data, selKend, inclHistori, inclJadwal, inclBiaya, inclFo
   @media print{body{padding:16px;} @page{margin:1cm;size:A4;}}
 </style>
 </head><body>
-  <h1>🚗 Laporan Garasi IdR</h1>
+  <h1>🚗 Laporan Garasiku</h1>
   <div class="meta">
     Digenerate: ${today} &nbsp;•&nbsp; Kendaraan: ${kendList.map(k=>k.model).join(', ')} &nbsp;•&nbsp; Total biaya: ${rp(totalBiaya)}
   </div>
